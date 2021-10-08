@@ -6,6 +6,6 @@
     name="robot_hardware" required="true" output="screen" />
 
 <node name="control" pkg="controller_manager" type="spawner" respawn="false"
-		output="screen" args="joint_state_controller joint_effort_controller"/>
+		output="screen" args="joint_state_controller theta2_controller"/>
 
 </launch>
