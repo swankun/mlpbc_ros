@@ -1,0 +1,27 @@
+acrobot_hybrid:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: "joint_state_controller/JointStateController"
+    publish_rate: 1000
+
+  epos:
+    device: "EPOS2"
+    protocol_stack: 'MAXON SERIAL V2' # default: 'MAXON SERIAL V2'
+    interface: 'USB' # default: 'USB'
+    port: 'USB0' # default: 'USB0'
+    node_id: 1 # default: 1 
+    baudrate: 1000000 # default:  0 (keep current baudrate)
+    timeout: 500 # [ms], default: 0 (keep current timeout)
+    encoder:
+      type: 2 # 1: INC 3CH, 2: INC 2CH
+      resolution: 4096 # encoder resolution
+      gear_ratio: 1 # gear ratio of motor
+      inverted_polarity: false
+
+  teensy:
+    port: "/dev/ttyACM0"
+    encoder:
+      resolution: 1024
+      gear_ratio: 1
+      inverted_polarity: false
+      

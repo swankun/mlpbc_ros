@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>robot_hardware</name>
+  <version>0.0.0</version>
+  <description>The robot_hardware package</description>
+  <maintainer email="wankun@todo.todo">wankun</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>effort_controllers</build_depend>
+  <build_depend>hardware_interface</build_depend>
+  <build_depend>joint_limits_interface</build_depend>
+  <build_depend>joint_state_controller</build_depend>
+  <build_depend>maxon_epos_ros</build_depend>
+  <build_depend>ros_control</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_export_depend>effort_controllers</build_export_depend>
+  <build_export_depend>hardware_interface</build_export_depend>
+  <build_export_depend>joint_limits_interface</build_export_depend>
+  <build_export_depend>joint_state_controller</build_export_depend>
+  <build_export_depend>maxon_epos_ros</build_export_depend>
+  <build_export_depend>ros_control</build_export_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <exec_depend>effort_controllers</exec_depend>
+  <exec_depend>hardware_interface</exec_depend>
+  <exec_depend>joint_limits_interface</exec_depend>
+  <exec_depend>joint_state_controller</exec_depend>
+  <exec_depend>ros_control</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+
+</package>
