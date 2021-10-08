@@ -7,18 +7,19 @@ EposDevice::EposDevice(ros::NodeHandle &nh) :
     pulses_to_rad_(1.0), last_command_(0.0)
 {
     // Create device handle
-    const DeviceInfo device_info(nh.param<std::string>("device", "EPOS2"),
-                                nh.param<std::string>("protocol_stack", "MAXON SERIAL V2"),
-                                nh.param<std::string>("interface", "USB"),
-                                nh.param<std::string>("port", "USB0"));
-    const unsigned short node_id(nh.param("node_id", 1));
+    ros::NodeHandle epos_nh(nh,"epos");
+    const DeviceInfo device_info(epos_nh.param<std::string>("device", "EPOS2"),
+                                epos_nh.param<std::string>("protocol_stack", "MAXON SERIAL V2"),
+                                epos_nh.param<std::string>("interface", "USB"),
+                                epos_nh.param<std::string>("port", "USB0"));
+    const unsigned short node_id(epos_nh.param("node_id", 1));
     epos_handle_ = HandleManager::CreateEposHandle(device_info, node_id);
     VCS_NODE_COMMAND_NO_ARGS(SetDisableState, epos_handle_);
     clearDeviceErrors();
 
     // Setup baud rate and comm timeout
-    const unsigned int baudrate(nh.param("baudrate", 0));
-    const unsigned int timeout(nh.param("timeout", 0));
+    const unsigned int baudrate(epos_nh.param("baudrate", 0));
+    const unsigned int timeout(epos_nh.param("timeout", 0));
     if (baudrate > 0 && timeout > 0) {
         VCS_COMMAND(SetProtocolStackSettings, epos_handle_.ptr.get(), baudrate, timeout);
     } else {
@@ -33,7 +34,7 @@ EposDevice::EposDevice(ros::NodeHandle &nh) :
     VCS_NODE_COMMAND_NO_ARGS(ActivateCurrentMode, epos_handle_);
 
     // Encoder configuration
-    ros::NodeHandle encoder_nh(nh, "encoder");
+    ros::NodeHandle encoder_nh(epos_nh, "encoder");
     const int type(encoder_nh.param("type", 0)); // 1: INC 3CH, 2: INC 2CH,
     if (type == 1 || type == 2) 
     {
