@@ -41,13 +41,12 @@ int main(int argc, char* argv[])
   // Create the serial rosserial server in a background ASIO event loop.
   std::string port;
   ros::param::param<std::string>("~teensy/port", port, "/dev/ttyACM0");
-  boost::asio::io_service io_service;
-  new rosserial_server::SerialSession(io_service, port, 115200);
-  boost::thread(boost::bind(&boost::asio::io_service::run, &io_service));
+  // boost::asio::io_service io_service;
+  // new rosserial_server::SerialSession(io_service, port, 115200);
+  // boost::thread(boost::bind(&boost::asio::io_service::run, &io_service));
 
   // Background thread for the controls callback.
-  ros::NodeHandle controller_nh("/robot_hardware");
-  controller_manager::ControllerManager cm(&robot, controller_nh);
+  controller_manager::ControllerManager cm(&robot);
   boost::thread(boost::bind(controlThread, ros::Rate(50), &robot, &cm));
 
   // Foreground ROS spinner for ROS callbacks, including rosserial, diagnostics

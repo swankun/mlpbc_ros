@@ -94,7 +94,7 @@ double EposDevice::readPosition()
 double EposDevice::readVelocity()
 {
     int raw_velocity;
-    VCS_NODE_COMMAND(GetPositionIs, epos_handle_, &raw_velocity);
+    VCS_NODE_COMMAND(VCS_GetVelocityIs, epos_handle_, &raw_velocity);
     return raw_velocity * RPM_TO_RADS;
 }
 
