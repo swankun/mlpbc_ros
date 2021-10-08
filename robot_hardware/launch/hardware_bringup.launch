@@ -1,0 +1,11 @@
+<launch>
+  
+<rosparam file="$(find robot_hardware)/config/hardware_config.yaml" command="load"/>
+
+<node pkg="robot_hardware" type="robot_hardware_node" 
+    name="robot_hardware" required="true" output="screen" />
+
+<node name="control" pkg="controller_manager" type="spawner" respawn="false"
+		output="screen" args="joint_state_controller joint_effort_controller"/>
+
+</launch>
