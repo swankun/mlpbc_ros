@@ -5,7 +5,7 @@
 <node pkg="robot_hardware" type="robot_hardware_node" 
     name="robot_hardware" required="true" output="screen" />
 
-<node name="control" pkg="controller_manager" type="spawner" respawn="false"
+<node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false"
 		output="screen" args="joint_state_controller theta2_controller"/>
 
 </launch>

@@ -45,6 +45,12 @@ class AcrobotHybrid : public hardware_interface::RobotHW
          */
         void write();
 
+        /**
+         * @brief Disable the hardware 
+         * 
+         */
+        void disable();
+
 
     protected:
 

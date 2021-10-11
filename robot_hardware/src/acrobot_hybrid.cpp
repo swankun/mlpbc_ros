@@ -33,6 +33,7 @@ AcrobotHybrid::AcrobotHybrid() : epos_device_(nh_)
 
 AcrobotHybrid::~AcrobotHybrid()
 {
+    epos_device_.disableDevice();
     epos_device_.~EposDevice();
 }
 
@@ -62,5 +63,9 @@ void AcrobotHybrid::write()
     epos_device_.writeCurrent(joints_[1].command);
 }
 
+void AcrobotHybrid::disable()
+{
+    epos_device_.disableDevice();
+}
 
 } // namespace

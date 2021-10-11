@@ -1,7 +1,9 @@
+control_loop_rate: 500
+
 # Publish all joint states -----------------------------------
 joint_state_controller:
   type: "joint_state_controller/JointStateController"
-  publish_rate: 1000
+  publish_rate: 200
 
 theta2_controller:
   type: "effort_controllers/JointEffortController"

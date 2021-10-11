@@ -31,6 +31,7 @@ class EposDevice
         double readVelocity();
         double readCurrent();
         void writeCurrent(const double cmd);
+        void disableDevice();
 
     private:
 

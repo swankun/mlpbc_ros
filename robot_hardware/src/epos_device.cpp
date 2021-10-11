@@ -30,8 +30,9 @@ EposDevice::EposDevice(ros::NodeHandle &nh) :
                 timeout > 0 ? timeout : current_timeout);
     }
 
-    // Set control mode to current control
+    // Set control mode to current control and set command to zero
     VCS_NODE_COMMAND_NO_ARGS(ActivateCurrentMode, epos_handle_);
+    VCS_NODE_COMMAND(SetCurrentMustEx, epos_handle_, 0.0);
 
     // Encoder configuration
     ros::NodeHandle encoder_nh(epos_nh, "encoder");
@@ -59,7 +60,7 @@ EposDevice::EposDevice(ros::NodeHandle &nh) :
 EposDevice::~EposDevice()
 {
     try {
-        VCS_NODE_COMMAND_NO_ARGS(SetDisableState, epos_handle_);
+        disableDevice();
     } catch (const EposException &e) {
         ROS_ERROR_STREAM(e.what());
     }
@@ -94,7 +95,7 @@ double EposDevice::readPosition()
 double EposDevice::readVelocity()
 {
     int raw_velocity;
-    VCS_NODE_COMMAND(VCS_GetVelocityIs, epos_handle_, &raw_velocity);
+    VCS_NODE_COMMAND(GetVelocityIs, epos_handle_, &raw_velocity);
     return raw_velocity * RPM_TO_RADS;
 }
 
@@ -114,6 +115,12 @@ void EposDevice::writeCurrent(const double cmd)
     last_command_ = cmd;
     long milliamps = static_cast<long>(cmd * 1000.0); // A to mA
     VCS_NODE_COMMAND(SetCurrentMustEx, epos_handle_, milliamps);
+}
+
+void EposDevice::disableDevice()
+{
+    VCS_NODE_COMMAND(SetCurrentMustEx, epos_handle_, 0.0);
+    VCS_NODE_COMMAND_NO_ARGS(SetDisableState, epos_handle_);
 }
 
 }
