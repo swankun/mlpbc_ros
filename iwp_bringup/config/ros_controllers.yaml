@@ -1,0 +1,9 @@
+# Publish all joint states -----------------------------------
+joint_state_controller:
+  type: "joint_state_controller/JointStateController"
+  publish_rate: 50
+
+theta2_controller:
+  type: "velocity_controllers/JointVelocityController"
+  joint: "theta2"
+  required_drive_mode: 4

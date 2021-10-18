@@ -1,0 +1,24 @@
+<launch>
+
+<node pkg="rosservice" type="rosservice" name="canopen_motor_node_logger" args="call --wait /canopen_motor_node/set_logger_level 'ros.canopen_motor_node' 'debug'" />
+
+<param name="robot_description" 
+    command="$(find xacro)/xacro --inorder '$(find iwp_bringup)/urdf/iwp.urdf.xacro'" />
+
+<node name="canopen_motor_node" pkg="canopen_motor_node" type="canopen_motor_node" output="screen">
+    <rosparam command="load" file="$(find iwp_bringup)/config/epos2.yaml" />
+</node>
+
+<!-- <node pkg="rosserial_server" type="serial_node" name="rosserial_server">
+    <rosparam>
+        port: /dev/ttyACM0
+    </rosparam>
+</node> -->
+
+<node pkg="rosservice" type="rosservice" name="canopen_motor_node_init" args="call --wait /driver/init '{}'" />
+
+<!-- <rosparam file="$(find iwp_bringup)/config/ros_controllers.yaml" command="load"/> -->
+<!-- <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false"
+		output="screen" args="joint_state_controller theta2_controller"/> -->
+
+</launch>
