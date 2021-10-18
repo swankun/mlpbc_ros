@@ -1,0 +1,4 @@
+order: 4
+sampling_frequency: 1000
+cutoff_frequency: 12
+joint_names: ["joint1"]

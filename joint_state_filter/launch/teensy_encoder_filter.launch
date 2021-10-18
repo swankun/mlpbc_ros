@@ -1,0 +1,12 @@
+<launch>
+  
+
+<node pkg="joint_state_filter" type="joint_state_filter_node" 
+    name="teensy_filter"  output="screen" >
+    <rosparam command="load" file="$(find joint_state_filter)/config/teensy_encoder_filter.yaml" />
+    <remap from="/joint_states" to="/serial_encoder/joint_state" />
+    <remap from="/joint_states_filtered" to="/serial_encoder/joint_state_filtered" />
+</node>
+
+
+</launch>
