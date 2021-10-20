@@ -11,11 +11,11 @@ FileRevision=0
 Description=
 EDSVersion=4.0
 
-CreationTime=03:40PM
+CreationTime=04:06PM
 CreationDate=10-18-2021
 CreatedBy=MEC103
 
-ModificationTime=03:40PM
+ModificationTime=04:06PM
 ModificationDate=10-18-2021
 ModifiedBy=MEC103
 
@@ -60,7 +60,7 @@ LSS_Supported=1
 [DeviceComissioning]
 NodeID=1
 NodeName=EPOS2
-Baudrate=500
+Baudrate=0
 NetNumber=0
 NetworkName=Network 0
 CANopenManager=0
@@ -334,7 +334,7 @@ LowLimit=0x80
 HighLimit=0x80
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x00000080
+ParameterValue=0x00000000
 
 [1008]
 ParameterName=Manufacturer Device Name
@@ -433,7 +433,7 @@ AccessType=rw
 DefaultValue=0x0100
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x00000100
+ParameterValue=0x00000000
 
 [1013]
 ParameterName=High Resolution Time Stamp
@@ -442,7 +442,7 @@ DataType=0x7
 AccessType=rww
 PDOMapping=1
 ObjFlags=1
-ParameterValue=0x6E6DEB6E
+ParameterValue=0x00000000
 
 [1014]
 ParameterName=COB-ID EMCY
@@ -607,7 +607,7 @@ AccessType=ro
 DefaultValue=$NODEID+0x600
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x00000601
+ParameterValue=0x00000000
 
 [1200sub2]
 ParameterName=SDO COB-ID Server->Client (tx)
@@ -617,7 +617,7 @@ AccessType=ro
 DefaultValue=$NODEID+0x580
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x00000581
+ParameterValue=0x00000000
 
 ;******************************************************************
 ;   Receive PDO 1 parameter
@@ -1221,7 +1221,7 @@ AccessType=rw
 DefaultValue=10
 PDOMapping=0
 ObjFlags=0
-ParameterValue=10
+ParameterValue=50
 
 ;******************************************************************
 ;   Transmit PDO 2 parameter
@@ -1249,7 +1249,7 @@ AccessType=rw
 DefaultValue=$NODEID+0xC0000280
 PDOMapping=0
 ObjFlags=0
-ParameterValue=0xC0000281
+ParameterValue=0x40000281
 
 [1801sub2]
 ParameterName=Transmission Type
@@ -1269,7 +1269,7 @@ AccessType=rw
 DefaultValue=10
 PDOMapping=0
 ObjFlags=0
-ParameterValue=10
+ParameterValue=50
 
 ;******************************************************************
 ;   Transmit PDO 3 parameter
@@ -1297,7 +1297,7 @@ AccessType=rw
 DefaultValue=$NODEID+0xC0000380
 PDOMapping=0
 ObjFlags=0
-ParameterValue=0xC0000381
+ParameterValue=0x40000381
 
 [1802sub2]
 ParameterName=Transmission Type
@@ -1317,7 +1317,7 @@ AccessType=rw
 DefaultValue=10
 PDOMapping=0
 ObjFlags=0
-ParameterValue=10
+ParameterValue=50
 
 ;******************************************************************
 ;   Transmit PDO 4 parameter
@@ -1345,7 +1345,7 @@ AccessType=rw
 DefaultValue=$NODEID+0xC0000480
 PDOMapping=0
 ObjFlags=0
-ParameterValue=0xC0000481
+ParameterValue=0x40000481
 
 [1803sub2]
 ParameterName=Transmission Type
@@ -1365,7 +1365,7 @@ AccessType=rw
 DefaultValue=10
 PDOMapping=0
 ObjFlags=0
-ParameterValue=10
+ParameterValue=50
 
 ;******************************************************************
 ;   Transmit PDO 1 mapping
@@ -1918,7 +1918,7 @@ DataType=0x6
 AccessType=ro
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x0002
+ParameterValue=0x0009
 
 [200C]
 SubNumber=5
@@ -2320,7 +2320,7 @@ DataType=0x3
 AccessType=ro
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x158A
+ParameterValue=0x0000
 
 [202Dsub2]
 ParameterName=Internal Object Minimum measured angle difference
@@ -2329,7 +2329,7 @@ DataType=0x3
 AccessType=ro
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0xEA21
+ParameterValue=0x0000
 
 [202Dsub3]
 ParameterName=Internal Object Angle difference overflow counter

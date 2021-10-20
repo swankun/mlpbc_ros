@@ -11,11 +11,11 @@ FileRevision=0
 Description=
 EDSVersion=4.0
 
-CreationTime=03:40PM
+CreationTime=03:59PM
 CreationDate=10-18-2021
 CreatedBy=MEC103
 
-ModificationTime=03:40PM
+ModificationTime=03:59PM
 ModificationDate=10-18-2021
 ModifiedBy=MEC103
 
@@ -442,7 +442,7 @@ DataType=0x7
 AccessType=rww
 PDOMapping=1
 ObjFlags=1
-ParameterValue=0x6E6DEB6E
+ParameterValue=0x00000000
 
 [1014]
 ParameterName=COB-ID EMCY
@@ -1249,7 +1249,7 @@ AccessType=rw
 DefaultValue=$NODEID+0xC0000280
 PDOMapping=0
 ObjFlags=0
-ParameterValue=0xC0000281
+ParameterValue=0x40000281
 
 [1801sub2]
 ParameterName=Transmission Type
@@ -1297,7 +1297,7 @@ AccessType=rw
 DefaultValue=$NODEID+0xC0000380
 PDOMapping=0
 ObjFlags=0
-ParameterValue=0xC0000381
+ParameterValue=0x40000381
 
 [1802sub2]
 ParameterName=Transmission Type
@@ -1345,7 +1345,7 @@ AccessType=rw
 DefaultValue=$NODEID+0xC0000480
 PDOMapping=0
 ObjFlags=0
-ParameterValue=0xC0000481
+ParameterValue=0x40000481
 
 [1803sub2]
 ParameterName=Transmission Type
@@ -1918,7 +1918,7 @@ DataType=0x6
 AccessType=ro
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x0002
+ParameterValue=0x0009
 
 [200C]
 SubNumber=5
@@ -2320,7 +2320,7 @@ DataType=0x3
 AccessType=ro
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0x158A
+ParameterValue=0x0000
 
 [202Dsub2]
 ParameterName=Internal Object Minimum measured angle difference
@@ -2329,7 +2329,7 @@ DataType=0x3
 AccessType=ro
 PDOMapping=0
 ObjFlags=1
-ParameterValue=0xEA21
+ParameterValue=0x0000
 
 [202Dsub3]
 ParameterName=Internal Object Angle difference overflow counter

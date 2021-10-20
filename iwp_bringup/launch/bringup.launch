@@ -17,8 +17,8 @@
 
 <node pkg="rosservice" type="rosservice" name="canopen_motor_node_init" args="call --wait /driver/init '{}'" />
 
-<!-- <rosparam file="$(find iwp_bringup)/config/ros_controllers.yaml" command="load"/> -->
-<!-- <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false"
-		output="screen" args="joint_state_controller theta2_controller"/> -->
+<rosparam file="$(find iwp_bringup)/config/ros_controllers.yaml" command="load"/>
+<node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false"
+		output="screen" args="joint_state_controller theta2_controller"/>
 
 </launch>
