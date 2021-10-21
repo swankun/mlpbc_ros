@@ -59,11 +59,11 @@ class Epos2Driver : public canopen::FiberDriver
 
             // Configure the slave to monitor the heartbeat of the master (node-ID 1)
             // with a timeout of 2000 ms.
-            Wait(AsyncWrite<uint32_t>(0x1016, 1, (1 << 16) | 2000));
+            Wait(AsyncWrite<uint32_t>(0x1016, 1, (this->master.id() << 16) | 500));
             // Configure the slave to produce a heartbeat every 1000 ms.
-            Wait(AsyncWrite<uint16_t>(0x1017, 0, 1000));
+            Wait(AsyncWrite<uint16_t>(0x1017, 0, 400));
             // Configure the heartbeat consumer on the master.
-            ConfigHeartbeat(2000ms);
+            ConfigHeartbeat(500ms);
 
             // Reset object 4000:00 and 4001:00 on the slave to 0.
             Wait(AsyncWrite<uint32_t>(0x4000, 0, 0));
@@ -116,15 +116,8 @@ class Epos2Driver : public canopen::FiberDriver
             // dictionary that will be sent by TPDO to object 4000:00 on the slave.
             tpdo_mapped[0x4000][0] = ++val;
             testval_ = val;
-            // boost::mutex::scoped_lock testval_lock(testval_mutex_, boost::try_to_lock);
-            // if (testval_lock)
-            // {
-            //     testval_ = val;
-            // }
-            // std::cout << "val: " << val << ", testval: " << testval_ << std::endl;
             }
         };
-        // boost::mutex testval_mutex_;
 
 
 

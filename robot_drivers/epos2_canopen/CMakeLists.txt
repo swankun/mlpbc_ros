@@ -10,7 +10,7 @@ project(epos2_canopen)
 find_package(catkin REQUIRED)
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(Boost REQUIRED COMPONENTS thread chrono)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LELY REQUIRED 
     liblely-can 

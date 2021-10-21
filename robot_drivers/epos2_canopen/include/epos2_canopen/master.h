@@ -23,7 +23,6 @@ class CanopenMaster
         void getVelocity(double &vel);
         void getPosition(double &vel);
         void getCurrent(double &vel);
-        void getDummy(void);
     
     private:
         uint8_t master_id_, slave_id_;

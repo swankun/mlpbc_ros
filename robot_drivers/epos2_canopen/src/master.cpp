@@ -36,10 +36,10 @@ CanopenMaster::CanopenMaster(std::string &device, std::string &eds_path,
 void CanopenMaster::startDevice()
 {
   pDriver_ = std::make_unique<Epos2Driver>(exec_, master_, slave_id_);
-  std::cout << "============================================== " << std::endl;
-  std::cout << "in startDevice(), created pDriver at " << &pDriver_ << std::endl;
-  std::cout << "in startDevice(), testval_ is at " << &pDriver_->testval_ << std::endl;
-  std::cout << "============================================== " << std::endl;
+  // std::cout << "============================================== " << std::endl;
+  // std::cout << "in startDevice(), created pDriver at " << &pDriver_ << std::endl;
+  // std::cout << "in startDevice(), testval_ is at " << &pDriver_->testval_ << std::endl;
+  // std::cout << "============================================== " << std::endl;
   master_.Reset();
   loop_.run();
 }
@@ -49,20 +49,7 @@ void CanopenMaster::setCurrent(const double milliamps)
 
 void CanopenMaster::getVelocity(double &vel)
 {
-  boost::mutex::scoped_lock feedback_msg_lock(feedback_msg_mutex_, boost::try_to_lock);
-  if (feedback_msg_lock)
-  {
-    // std::cout << "locked" << std::endl;
-    // auto out = pDriver_->testval_;
-  }
-}
-
-void CanopenMaster::getDummy(void)
-{
-  std::cout << "getDummy, pDriver_ at " << &pDriver_ << std::endl;
-  std::cout << "getDummy, testval_ at " << &pDriver_->testval_ << std::endl;
-  std::cout << "getDummy, testval_ is " << pDriver_->testval_ << std::endl;
-  // uint32_t out = pDriver_->getValue();
+  vel = static_cast<double>(pDriver_->testval_);
 }
 
 void CanopenMaster::getPosition(double &vel)
