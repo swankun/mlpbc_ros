@@ -5,7 +5,9 @@ namespace epos2_canopen
 
 CanopenMaster::CanopenMaster(std::string &device, std::string &eds_path, 
                              uint8_t master_nid, uint8_t slave_nid) 
-  : poll_(ctx_)
+  : master_id_(master_nid)
+  , slave_id_(slave_nid)
+  , poll_(ctx_)
   , loop_(poll_.get_poll())
   , exec_(loop_.get_executor())
   , timer_(poll_, exec_, CLOCK_MONOTONIC)
@@ -13,7 +15,6 @@ CanopenMaster::CanopenMaster(std::string &device, std::string &eds_path,
   , chan_(poll_, exec_)
   , master_(timer_, chan_, eds_path, "", master_nid)
   , sigset_(poll_, exec_)
-  // , driver_(exec_, master_, slave_nid)
 {
   chan_.open(ctrl_);
   sigset_.insert(SIGHUP);
@@ -26,15 +27,15 @@ CanopenMaster::CanopenMaster(std::string &device, std::string &eds_path,
     // Tell the master to start the deconfiguration process for all nodes, and
     // submit a task to be executed once that process completes.
     master_.AsyncDeconfig().submit(exec_, [&]() {
-      // Perform a clean shutdown.
-      ctx_.shutdown();
+    // Perform a clean shutdown.
+    ctx_.shutdown();
     });
   });
 }
 
 void CanopenMaster::startDevice()
 {
-  pDriver_ = std::make_unique<Epos2Driver>(exec_, master_, 2);
+  pDriver_ = std::make_unique<Epos2Driver>(exec_, master_, slave_id_);
   std::cout << "============================================== " << std::endl;
   std::cout << "in startDevice(), created pDriver at " << &pDriver_ << std::endl;
   std::cout << "in startDevice(), testval_ is at " << &pDriver_->testval_ << std::endl;

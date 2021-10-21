@@ -26,6 +26,7 @@ class CanopenMaster
         void getDummy(void);
     
     private:
+        uint8_t master_id_, slave_id_;
         // Create an I/O context to synchronize I/O services during shutdown.
         io::Context ctx_;
         // Create an platform-specific I/O polling instance to monitor the CAN bus, as
