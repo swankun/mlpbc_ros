@@ -15,8 +15,10 @@ namespace epos2_canopen
 class CanopenMaster
 {
     public:
-        CanopenMaster(std::string &device, std::string &eds_path, 
+        CanopenMaster(const std::string &device, const std::string &eds_path,
                       uint8_t master_nid=255, uint8_t slave_nid=1);
+        CanopenMaster(const std::string &device, const std::string &eds_path, 
+                      const std::string &eds_bin_path, uint8_t master_nid=255, uint8_t slave_nid=1);
 
         void startDevice();
         void stopDevice();
@@ -27,6 +29,8 @@ class CanopenMaster
         void getCurrent(double &vel);
     
     private:
+        void init();
+        static bool wait_for(lely::canopen::SdoFuture<void> fut, const int timeout_ms);
         uint8_t master_id_, slave_id_;
         // Create an I/O context to synchronize I/O services during shutdown.
         io::Context ctx_;
@@ -53,8 +57,7 @@ class CanopenMaster
         canopen::AsyncMaster master_;
         // Create a signal handler.
         io::SignalSet sigset_;
-
-        // Epos2Driver driver_;
+        // Epos2Driver <: FiberDriver
         std::unique_ptr<Epos2Driver> pDriver_;
 };
 }

@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
         // std::cout << "Velocity: " << vel << "." << std::endl;
         boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     }
-    co.stopDevice();
+    // co.stopDevice();
     co_thr.join();
     std::cout << "Press Enter to exit." << std::endl;
     // std::cin.get();

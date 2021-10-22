@@ -2,8 +2,6 @@
 #define EPOS2_CANOPEN_H
 
 #include <lely/coapp/fiber_driver.hpp>
-
-#include <boost/thread.hpp>
 #include <iostream>
 
 namespace epos2_canopen
@@ -134,14 +132,6 @@ class Epos2Driver : public canopen::FiberDriver
                 tpdo_mapped[0x4000][0] = ++val;
             }
         };
-
-        // void
-        // OnSync(uint8_t cnt, const time_point& t) noexcept override
-        // {
-        //     // tpdo_mapped[0x6060][0] = static_cast<int8_t>(-3);
-        //     // tpdo_mapped[0x2030][0] = static_cast<int16_t>(10);
-        // };
-
 
 }; // class Epos2Driver
 
