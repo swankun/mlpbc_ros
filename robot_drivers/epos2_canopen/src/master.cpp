@@ -34,23 +34,24 @@ CanopenMaster::CanopenMaster(const std::string &device,
   , sigset_(poll_, exec_)
 { init(); }
 
+
 void CanopenMaster::init()
 {
   chan_.open(ctrl_);
-  sigset_.insert(SIGHUP);
-  sigset_.insert(SIGINT);
-  sigset_.insert(SIGTERM);
-  // Submit a task to be executed when a signal is raised. We don't care which.
-  sigset_.submit_wait([&](int /*signo*/) {
-    // If the signal is raised again, terminate immediately.
-    sigset_.clear();
-    // Tell the master to start the deconfiguration process for all nodes, and
-    // submit a task to be executed once that process completes.
-    master_.AsyncDeconfig().submit(exec_, [&]() {
-    // Perform a clean shutdown.
-    ctx_.shutdown();
-    });
-  });
+  // sigset_.insert(SIGHUP);
+  // sigset_.insert(SIGINT);
+  // sigset_.insert(SIGTERM);
+  // // Submit a task to be executed when a signal is raised. We don't care which.
+  // sigset_.submit_wait([&](int /*signo*/) {
+  //   // If the signal is raised again, terminate immediately.
+  //   sigset_.clear();
+  //   // Tell the master to start the deconfiguration process for all nodes, and
+  //   // submit a task to be executed once that process completes.
+  //   master_.AsyncDeconfig().submit(exec_, [&]() {
+  //   // Perform a clean shutdown.
+  //   ctx_.shutdown();
+  //   });
+  // });
 }
 
 void CanopenMaster::startDevice()
@@ -70,6 +71,10 @@ void CanopenMaster::stopDevice()
   // Disable hearbeat consumer on master
   pDriver_->ConfigHeartbeat(0ms);
 
+  // Disable operation on the slave.
+  fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x6040, 0, 0x06, 2000ms);
+  wait_for(fut, 2000);
+
   // Disable the heartbeat producer on the slave.
   fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x1017, 0, 0, 2000ms);
   wait_for(fut, 2000);
@@ -87,19 +92,32 @@ bool CanopenMaster::isShutdown()
 
 void CanopenMaster::setCurrent(const double milliamps)
 {
-  pDriver_->tpdo_mapped[0x2030][0] = static_cast<int16_t>(750);
+  pDriver_->tpdo_mapped[0x2030][0] = static_cast<int16_t>(milliamps);
+  // double val;
+  // getPosition(val);
+  // pDriver_->tpdo_mapped[0x4000][0] = static_cast<uint32_t>(++val);
 }
 
-void CanopenMaster::getVelocity(double &vel)
+void CanopenMaster::getVelocity(double &val)
 {
-  vel = static_cast<double>(pDriver_->testval_);
+  int32_t raw = pDriver_->rpdo_mapped[0x606C][0];
+  // uint32_t raw = pDriver_->rpdo_mapped[0x4001][0];
+  val = static_cast<double>(raw);
 }
 
-void CanopenMaster::getPosition(double &vel)
-{}
+void CanopenMaster::getPosition(double &val)
+{
+  int32_t raw = pDriver_->rpdo_mapped[0x6064][0];
+  // uint32_t raw = pDriver_->rpdo_mapped[0x4001][0];
+  val = static_cast<double>(raw);
+}
 
-void CanopenMaster::getCurrent(double &vel)
-{}
+void CanopenMaster::getCurrent(double &val)
+{
+  int16_t raw = pDriver_->rpdo_mapped[0x2027][0];
+  // uint32_t raw = pDriver_->rpdo_mapped[0x4001][0];
+  val = static_cast<double>(raw);
+}
 
 bool CanopenMaster::wait_for(lely::canopen::SdoFuture<void> fut, const int timeout_ms)
 {

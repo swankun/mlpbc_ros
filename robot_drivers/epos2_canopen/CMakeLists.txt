@@ -7,7 +7,9 @@ project(epos2_canopen)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+    roscpp
+)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS thread chrono)
@@ -110,10 +112,10 @@ pkg_check_modules(LELY REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES epos2_canopen
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
+ INCLUDE_DIRS include ${LELY_INCLUDE_DIRS}
+ LIBRARIES epos2_canopen ${LELY_LIBRARIES}
+ CATKIN_DEPENDS roscpp
+#  DEPENDS PkgConfig
 )
 
 ###########
@@ -124,7 +126,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
     include
-    # ${catkin_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${LELY_INCLUDE_DIRS}
 )
@@ -132,13 +134,14 @@ include_directories(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
     src/master.cpp
+    src/master_ros.cpp
 )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${LELY_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LELY_LIBRARIES} ${catkin_LIBRARIES})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -157,7 +160,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
+  ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
   ${PROJECT_NAME}
 )

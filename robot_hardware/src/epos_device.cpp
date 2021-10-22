@@ -7,7 +7,7 @@ EposDevice::EposDevice(ros::NodeHandle &nh) :
     pulses_to_rad_(1.0), last_command_(0.0)
 {
     // Create device handle
-    ros::NodeHandle epos_nh(nh,"epos");
+    ros::NodeHandle epos_nh(nh,"epos_usb");
     const DeviceInfo device_info(epos_nh.param<std::string>("device", "EPOS2"),
                                 epos_nh.param<std::string>("protocol_stack", "MAXON SERIAL V2"),
                                 epos_nh.param<std::string>("interface", "USB"),

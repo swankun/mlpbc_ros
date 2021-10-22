@@ -31,12 +31,6 @@ AcrobotHybrid::AcrobotHybrid() : epos_device_(nh_)
     serial_sub_ = nh_.subscribe(serial_topic, 1, &AcrobotHybrid::serialCallback, this);
 }
 
-AcrobotHybrid::~AcrobotHybrid()
-{
-    epos_device_.disableDevice();
-    epos_device_.~EposDevice();
-}
-
 void AcrobotHybrid::serialCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
     // Update the feedback message pointer to point to the current message. Block

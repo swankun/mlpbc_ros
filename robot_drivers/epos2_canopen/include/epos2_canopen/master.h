@@ -1,3 +1,6 @@
+#ifndef EPOS2_CANOPEN_MASTER_H
+#define EPOS2_CANOPEN_MASTER_H
+
 #include <boost/thread.hpp>
 
 #include <lely/ev/loop.hpp>
@@ -24,9 +27,9 @@ class CanopenMaster
         void stopDevice();
         bool isShutdown();
         void setCurrent(const double milliamps);
-        void getVelocity(double &vel);
-        void getPosition(double &vel);
-        void getCurrent(double &vel);
+        void getVelocity(double &val);
+        void getPosition(double &val);
+        void getCurrent(double &val);
     
     private:
         void init();
@@ -60,4 +63,6 @@ class CanopenMaster
         // Epos2Driver <: FiberDriver
         std::unique_ptr<Epos2Driver> pDriver_;
 };
-}
+}   // namespace
+
+#endif // EPOS2_CANOPEN_MASTER_H

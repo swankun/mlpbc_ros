@@ -64,11 +64,11 @@ class Epos2Driver : public canopen::FiberDriver
             ConfigHeartbeat(2000ms);
 
             // Reset object 4000:00 and 4001:00 on the slave to 0.
-            Wait(AsyncWrite<uint32_t>(0x4000, 0, 0));
-            Wait(AsyncWrite<uint32_t>(0x4001, 0, 0));
-            // Wait(AsyncWrite<int8_t>(0x6060, 0, -3));
-            // Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
-            // Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x0f));
+            // Wait(AsyncWrite<uint32_t>(0x4000, 0, 0));
+            // Wait(AsyncWrite<uint32_t>(0x4001, 0, 0));
+            Wait(AsyncWrite<int8_t>(0x6060, 0, -3));
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x0f));
 
             // Report success (empty error code).
             res({});
@@ -90,7 +90,7 @@ class Epos2Driver : public canopen::FiberDriver
             std::cout << "Attempting to Deconfig...." << std::endl;
             std::cout << "==========================" << std::endl;
             try {
-            // Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
             // Disable the heartbeat consumer on the master.
             ConfigHeartbeat(0ms);
             // Disable the heartbeat producer on the slave.
@@ -124,13 +124,7 @@ class Epos2Driver : public canopen::FiberDriver
                 int32_t position_actual_value = rpdo_mapped[0x6064][0];
             } else if (idx == 0x606C && subidx == 0) {
                 int32_t velocity_actual_value = rpdo_mapped[0x606C][0];
-            } else if (idx == 0x4001 && subidx == 0) {
-                // Obtain the value sent by PDO from object 4001:00 on the slave.
-                uint32_t val = rpdo_mapped[0x4001][0];
-                // Increment the value and store it to an object in the local object
-                // dictionary that will be sent by TPDO to object 4000:00 on the slave.
-                tpdo_mapped[0x4000][0] = ++val;
-            }
+            } 
         };
 
 }; // class Epos2Driver

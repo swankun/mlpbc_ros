@@ -11,10 +11,13 @@
 #include <urdf/model.h>
 #include <sensor_msgs/JointState.h>
 
-#include <robot_hardware/epos_device.h>
+// #include <robot_hardware/epos_device.h>
+#include <epos2_canopen/master_ros.h>
 
 namespace robot_hardware
 {
+
+typedef epos2_canopen::Epos2Ros Epos2Interface;
 
 class AcrobotHybrid : public hardware_interface::RobotHW
 {
@@ -26,12 +29,6 @@ class AcrobotHybrid : public hardware_interface::RobotHW
          */
         AcrobotHybrid();
         
-        /**
-         * @brief Destroy the Acrobot Hybrid object
-         * 
-         */
-        ~AcrobotHybrid();
-
         
         /**
          * @brief Read feedback from hardware
@@ -112,7 +109,7 @@ class AcrobotHybrid : public hardware_interface::RobotHW
          * @brief  EposDevice object representing the EPOS2 controller
          * 
          */
-        EposDevice epos_device_;
+        Epos2Interface epos_device_;
 
 
 }; // class AcrobotHybrid

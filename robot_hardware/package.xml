@@ -16,5 +16,6 @@
   <depend>roscpp</depend>
   <depend>rosserial_server</depend>
   <depend>sensor_msgs</depend>
+  <depend>epos2_canopen</depend>
 
 </package>

@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rosserial_server
   sensor_msgs
+  epos2_canopen
 )
 
 ## System dependencies are found with CMake's conventions
@@ -119,28 +120,28 @@ catkin_package(
 ## Build ##
 ###########
 
-# include_directories(
-#   include
-#   ${catkin_INCLUDE_DIRS}
-# )
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
 
 # add_library(${PROJECT_NAME}_EPOS
 #   src/epos_device.cpp
 # )
-# add_library(${PROJECT_NAME}
-#   src/acrobot_hybrid.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/acrobot_hybrid.cpp
+)
 
 # add_dependencies(${PROJECT_NAME}_EPOS ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-# add_executable(${PROJECT_NAME}_node src/robot_hardware.cpp)
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${PROJECT_NAME}
-#   ${PROJECT_NAME}_EPOS
-#   ${catkin_LIBRARIES}
-# )
+add_executable(${PROJECT_NAME}_node src/robot_hardware.cpp)
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}
+  # ${PROJECT_NAME}_EPOS
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
