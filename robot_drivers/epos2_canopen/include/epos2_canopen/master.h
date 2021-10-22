@@ -19,6 +19,8 @@ class CanopenMaster
                       uint8_t master_nid=255, uint8_t slave_nid=1);
 
         void startDevice();
+        void stopDevice();
+        bool isShutdown();
         void setCurrent(const double milliamps);
         void getVelocity(double &vel);
         void getPosition(double &vel);
@@ -54,6 +56,5 @@ class CanopenMaster
 
         // Epos2Driver driver_;
         std::unique_ptr<Epos2Driver> pDriver_;
-        boost::mutex feedback_msg_mutex_;
 };
 }
