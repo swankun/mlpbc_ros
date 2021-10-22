@@ -61,13 +61,15 @@ class Epos2Driver : public canopen::FiberDriver
             // with a timeout of 2000 ms.
             Wait(AsyncWrite<uint32_t>(0x1016, 1, (this->master.id() << 16) | 500));
             // Configure the slave to produce a heartbeat every 1000 ms.
-            Wait(AsyncWrite<uint16_t>(0x1017, 0, 400));
+            Wait(AsyncWrite<uint16_t>(0x1017, 0, 1000));
             // Configure the heartbeat consumer on the master.
             ConfigHeartbeat(500ms);
 
             // Reset object 4000:00 and 4001:00 on the slave to 0.
-            Wait(AsyncWrite<uint32_t>(0x4000, 0, 0));
-            Wait(AsyncWrite<uint32_t>(0x4001, 0, 0));
+            Wait(AsyncWrite<int8_t>(0x6060, 0, -3));
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x0f));
+            // Wait(AsyncWrite<uint32_t>(0x4001, 0, 0));
 
             // Report success (empty error code).
             res({});
@@ -86,6 +88,7 @@ class Epos2Driver : public canopen::FiberDriver
         OnDeconfig(std::function<void(std::error_code ec)> res) noexcept override 
         {
             try {
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
             // Disable the heartbeat consumer on the master.
             ConfigHeartbeat(0ms);
             // Disable the heartbeat producer on the slave.
@@ -109,16 +112,27 @@ class Epos2Driver : public canopen::FiberDriver
         void
         OnRpdoWrite(uint16_t idx, uint8_t subidx) noexcept override 
         {
-            if (idx == 0x4001 && subidx == 0) {
-            // Obtain the value sent by PDO from object 4001:00 on the slave.
-            uint32_t val = rpdo_mapped[0x4001][0];
-            // Increment the value and store it to an object in the local object
-            // dictionary that will be sent by TPDO to object 4000:00 on the slave.
-            tpdo_mapped[0x4000][0] = ++val;
-            testval_ = val;
+            if (idx == 0x6041 && subidx == 0) {
+                uint16_t status_word = rpdo_mapped[0x6041][0];
+            } else if (idx == 0x6078 && subidx == 0) {
+                int16_t current_actual = rpdo_mapped[0x6078][0];
+            } else if (idx == 0x6061 && subidx == 0) {
+                int8_t mode_of_operation = rpdo_mapped[0x6061][0];
+            } else if (idx == 0x6064 && subidx == 0) {
+                int32_t position_actual_value = rpdo_mapped[0x6064][0];
+            } else if (idx == 0x606C && subidx == 0) {
+                int32_t velocity_actual_value = rpdo_mapped[0x606C][0];
             }
+            // std::cout << "setting current value" << std::endl;
+            
         };
 
+        // void
+        // OnSync(uint8_t cnt, const time_point& t) noexcept override
+        // {
+        //     // tpdo_mapped[0x6060][0] = static_cast<int8_t>(-3);
+        //     // tpdo_mapped[0x2030][0] = static_cast<int16_t>(10);
+        // };
 
 
 }; // class Epos2Driver

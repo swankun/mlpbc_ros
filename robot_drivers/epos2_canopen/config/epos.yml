@@ -1,0 +1,8 @@
+master:
+  node_id: 127
+  sync_period: 1000 # us
+
+epos7010:
+  dcf: "epos7010-20211021.dcf"
+  node_id: 1
+

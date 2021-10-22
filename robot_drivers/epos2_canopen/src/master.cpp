@@ -45,7 +45,9 @@ void CanopenMaster::startDevice()
 }
 
 void CanopenMaster::setCurrent(const double milliamps)
-{}
+{
+  pDriver_->tpdo_mapped[0x2030][0] = static_cast<int16_t>(750);
+}
 
 void CanopenMaster::getVelocity(double &vel)
 {
