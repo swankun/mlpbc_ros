@@ -66,32 +66,37 @@ void CanopenMaster::startDevice()
 void CanopenMaster::stopDevice()
 {
   if (isShutdown()) { return; }
-  lely::canopen::SdoFuture<void> fut;
-
-  /*
-  // Disable hearbeat consumer on master
-  pDriver_->ConfigHeartbeat(0ms);
-
-  // Disable operation on the slave.
-  fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x6040, 0, 0x06, 2000ms);
-  wait_for(fut, 2000);
-
-  // Disable the heartbeat producer on the slave.
-  fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x1017, 0, 0, 2000ms);
-  wait_for(fut, 2000);
-
-  // Disable the heartbeat consumer on the slave.
-  fut = master_.AsyncWrite<uint32_t>(exec_, slave_id_, 0x1016, 1, 0, 2000ms);
-  wait_for(fut, 2000);
-  loop_.stop();
-  */
-
-  lely::ev::Future<size_t,void> ev_fut = master_.AsyncDeconfig();
+  lely::canopen::SdoFuture<void> sdo_fut;
+  lely::ev::Future<size_t,void> deconfig_fut = master_.AsyncDeconfig();
+  bool success = false;
   for (size_t i=0; i<20; i++)
   {    
-    if (ev_fut.is_ready()) break;
+    if (deconfig_fut.is_ready()) {
+      success = true;
+      break;
+    }
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
   }
+  if (!success) // brute-force shutdown
+  {
+    std::cout << "Graceful shutdown failed! Begin brute-force shutdown." << std::endl;
+
+    // Disable hearbeat consumer on master
+    pDriver_->ConfigHeartbeat(0ms);
+
+    // Disable operation on the slave.
+    sdo_fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x6040, 0, 0x06, 2000ms);
+    wait_for(sdo_fut, 2000);
+
+    // Disable the heartbeat producer on the slave.
+    sdo_fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x1017, 0, 0, 2000ms);
+    wait_for(sdo_fut, 2000);
+
+    // Disable the heartbeat consumer on the slave.
+    sdo_fut = master_.AsyncWrite<uint32_t>(exec_, slave_id_, 0x1016, 1, 0, 2000ms);
+    wait_for(sdo_fut, 2000);
+  }
+  loop_.stop();
 }
 
 bool CanopenMaster::isShutdown()
