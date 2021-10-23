@@ -4,9 +4,9 @@ using MLBasedESC
 using LinearAlgebra
 using RobotOS
 @rosimport sensor_msgs.msg: JointState
-@rosimport maxon_epos_msgs.msg: MotorState
+@rosimport std_msgs.msg: Float64
 rostypegen()
-using .sensor_msgs.msg, .maxon_epos_msgs.msg
+using .sensor_msgs.msg, .std_msgs.msg
 
 const USE_J2 = false
 const MOTOR_NAME = "epos2"
@@ -84,17 +84,17 @@ end
 
 function main()
     init_node("ida_pbc_controller")
-    state = zeros(Float32,4)
-    pub = Publisher{MotorState}("epos2_commands", queue_size=1)
-    sub = Subscriber{JointState}("states", update_state, (state,), queue_size=1)
+    state = zeros(Float64,4)
+    pub = Publisher{Float64Msg}("theta2_controller/command", queue_size=1)
+    sub = Subscriber{JointState}("/joint_states", update_state, (state,), queue_size=1)
     # prob = create_ida_pbc_problem()
     prob = create_known_ida_pbc()
     u = controller(prob)
-    loop_rate = Rate(500.0)
+    loop_rate = Rate(800.0)
     while !is_shutdown()
         header = std_msgs.msg.Header()
         header.stamp = RobotOS.now()
-        cmd = MotorState(header, MOTOR_NAME, 0.0, 0.0, u(state[1:2], state[3:4]))
+        cmd = Float64Msg(u(state[1:2], state[3:4]))
         publish(pub, cmd)
         rossleep(loop_rate)
     end
