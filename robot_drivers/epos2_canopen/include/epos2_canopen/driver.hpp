@@ -65,7 +65,7 @@ class Epos2Driver : public canopen::FiberDriver
 
             // Reset object 4000:00 and 4001:00 on the slave to 0.
             // Wait(AsyncWrite<uint32_t>(0x4000, 0, 0));
-            // Wait(AsyncWrite<uint32_t>(0x4001, 0, 0));
+            Wait(AsyncWrite<int16_t>(0x2030, 0, 0));
             Wait(AsyncWrite<int8_t>(0x6060, 0, -3));
             Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
             Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x0f));
@@ -90,6 +90,7 @@ class Epos2Driver : public canopen::FiberDriver
             std::cout << "Attempting to Deconfig...." << std::endl;
             std::cout << "==========================" << std::endl;
             try {
+            Wait(AsyncWrite<int16_t>(0x2030, 0, 0));
             Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
             // Disable the heartbeat consumer on the master.
             ConfigHeartbeat(0ms);
