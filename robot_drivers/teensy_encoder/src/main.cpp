@@ -34,7 +34,7 @@ float _jstate_eff[1] = {0};
 ros::NodeHandle nh;
 
 // Publisher
-ros::Publisher  joint_state_publisher("/teensy_serial", &jstate);
+ros::Publisher  joint_state_publisher("/serial_encoder", &jstate);
 void publishState()
 {
   float current_position =  (float)encoder.read() / 4.0 / encoder_resolution * 2.0 * M_PI;

@@ -89,8 +89,8 @@ class AcrobotHybrid : public hardware_interface::RobotHW
          */
         struct Joint
         {
-            double position, velocity, effort, command;
-            Joint() : position(0), velocity(0), effort(0), command(0) {}
+            double position, velocity, effort, command, home;
+            Joint() : position(0), velocity(0), effort(0), command(0), home(0) {}
         } joints_[2];
 
         /**
@@ -110,6 +110,8 @@ class AcrobotHybrid : public hardware_interface::RobotHW
          * 
          */
         Epos2Interface epos_device_;
+        
+        bool theta1_homed_=false, theta2_homed_=false;
 
 
 }; // class AcrobotHybrid
