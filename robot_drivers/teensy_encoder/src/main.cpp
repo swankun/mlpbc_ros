@@ -7,7 +7,7 @@
 #include <Encoder.h>
 #include <filters.h>
 
-#define PUBLISH_PERIOD_MICRO 1000
+#define PUBLISH_PERIOD_MICRO 800
 
 typedef std_srvs::TriggerRequest  ResetReq;
 typedef std_srvs::TriggerResponse ResetRes;
@@ -34,7 +34,7 @@ float _jstate_eff[1] = {0};
 ros::NodeHandle nh;
 
 // Publisher
-ros::Publisher  joint_state_publisher("/serial_encoder/joint_state", &jstate);
+ros::Publisher  joint_state_publisher("/teensy_serial", &jstate);
 void publishState()
 {
   float current_position =  (float)encoder.read() / 4.0 / encoder_resolution * 2.0 * M_PI;
