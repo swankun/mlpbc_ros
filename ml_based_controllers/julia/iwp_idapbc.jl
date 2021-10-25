@@ -90,7 +90,7 @@ function main()
     # prob = create_ida_pbc_problem()
     prob = create_known_ida_pbc()
     u = controller(prob)
-    loop_rate = Rate(800.0)
+    loop_rate = Rate(500.0)
     while !is_shutdown()
         header = std_msgs.msg.Header()
         header.stamp = RobotOS.now()
@@ -98,7 +98,13 @@ function main()
         publish(pub, cmd)
         rossleep(loop_rate)
     end
+    safe_shutdown_hack()
 end
+
+function safe_shutdown_hack()
+    run(`rostopic pub -1 /theta2_controller/command std_msgs/Float64 "data: 0. "`, wait=false);
+end
+Base.atexit(safe_shutdown_hack)
 
 if !isinteractive()
     main()

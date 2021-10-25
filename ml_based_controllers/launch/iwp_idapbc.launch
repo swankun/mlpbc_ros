@@ -1,8 +1,8 @@
 <launch>
   
-<node pkg="ml_based_controllers" type="iwp_idapbc.jl" name="iwp_controller">
+<node pkg="ml_based_controllers" type="run.sh" name="iwp_controller" output="screen">
     <env name="JULIA_PROJECT" value="$(find ml_based_controllers)/julia" />
-    <env name="JULIA_DEPOT_PATH" value="/home/wankun/Projects/archive/2021/acrobot_hybrid/.julia" />
-</node>
+    <env name="JULIA_DEPOT_PATH" value="$(find ml_based_controllers)/../../.julia" />
+</node> 
 
 </launch>
