@@ -2,7 +2,7 @@
 
     <arg name="record" default="false" />
     <arg name="rate" default="500" />
-    <arg name="max_effort" default="0.8" />
+    <arg name="max_effort" default="0.75" />
 
     <node pkg="rosbag" if="$(arg record)" required="true" type="record" name="record_states" 
           args="/joint_states -o $(find ml_based_controllers)/bag/joint_states --duration=20s" />
