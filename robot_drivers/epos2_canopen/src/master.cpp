@@ -114,7 +114,8 @@ void CanopenMaster::setCurrent(const double milliamps)
 
 void CanopenMaster::getVelocity(double &val)
 {
-  int32_t raw = pDriver_->rpdo_mapped[0x606C][0];
+  // int32_t raw = pDriver_->rpdo_mapped[0x606C][0];
+  int32_t raw = pDriver_->rpdo_mapped[0x2028][0];
   // uint32_t raw = pDriver_->rpdo_mapped[0x4001][0];
   val = static_cast<double>(raw);
 }

@@ -1,0 +1,20 @@
+ <launch>
+
+    <arg name="record" default="false" />
+    <arg name="rate" default="500" />
+    <arg name="max_effort" default="0.8" />
+
+    <node pkg="rosbag" if="$(arg record)" required="true" type="record" name="record_states" 
+          args="/joint_states -o $(find ml_based_controllers)/bag/joint_states --duration=20s" />
+
+    <!-- Publish periodic torque commands -->
+    <node pkg="ml_based_controllers" required="true" name="linear_controller" type="linear.py" output="screen">
+        <param name="deadband" value="0.0" type="double" />
+        <param name="saturation" value="$(arg max_effort)" type="double" />   <!-- LQR -->
+        <param name="publish_rate" value="$(arg rate)" type="int" />
+        <param name="state_topic" value="/joint_states" type="str" />
+        <param name="effort_topic" value="/theta2_controller/command" type="str" />
+    </node>
+
+</launch>
+

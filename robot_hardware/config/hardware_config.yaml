@@ -24,8 +24,8 @@ epos_usb:
     inverted_polarity: false
 
 epos_canopen:
-  eds_file: "/home/wankun/Projects/archive/2021/acrobot_hybrid/src/robot_drivers/epos2_canopen/config/master.dcf"
-  eds_bin: "/home/wankun/Projects/archive/2021/acrobot_hybrid/src/robot_drivers/epos2_canopen/config/master.bin"
+  eds_file: "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/robot_drivers/epos2_canopen/config/master.dcf"
+  eds_bin: "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/robot_drivers/epos2_canopen/config/master.bin"
   can_device: "can0"
   master_id: 127
   slave_id: 1

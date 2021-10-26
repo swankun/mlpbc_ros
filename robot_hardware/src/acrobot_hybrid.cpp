@@ -56,14 +56,14 @@ void AcrobotHybrid::read()
         joints_[0].position = serial_feedback_->position[0] - joints_[0].home;
         joints_[0].velocity = serial_feedback_->velocity[0];
     }
-    joints_[1].position = epos_device_.readPosition() - joints_[1].home;
-    joints_[1].velocity = epos_device_.readVelocity();
-    joints_[1].effort = epos_device_.readCurrent();
+    joints_[1].position = -(epos_device_.readPosition() - joints_[1].home);
+    joints_[1].velocity = -epos_device_.readVelocity();
+    joints_[1].effort = -epos_device_.readCurrent();
 }
 
 void AcrobotHybrid::write()
 {
-    epos_device_.writeCurrent(joints_[1].command);
+    epos_device_.writeCurrent(-joints_[1].command);
 }
 
 void AcrobotHybrid::disable()

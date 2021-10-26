@@ -67,8 +67,9 @@ class Epos2Driver : public canopen::FiberDriver
             // Wait(AsyncWrite<uint32_t>(0x4000, 0, 0));
             Wait(AsyncWrite<int16_t>(0x2030, 0, 0));
             Wait(AsyncWrite<int8_t>(0x6060, 0, -3));
-            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));
-            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x0f));
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x80));    // clear errors
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x06));    // Shutdown 
+            Wait(AsyncWrite<uint16_t>(0x6040, 0, 0x0f));    // Switch on & enable operation
 
             // Report success (empty error code).
             res({});
