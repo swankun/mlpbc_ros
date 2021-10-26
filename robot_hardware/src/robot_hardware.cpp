@@ -6,11 +6,14 @@
 
 #include <controller_manager/controller_manager.h>
 #include <ros/ros.h>
+#include <std_srvs/Trigger.h>
 #include <rosserial_server/serial_session.h>
 
 #include <robot_hardware/acrobot_hybrid.h>
 
 typedef boost::chrono::steady_clock time_source;
+typedef std_srvs::TriggerRequest  ResetReq;
+typedef std_srvs::TriggerResponse ResetRes;
 
 void controlThread(ros::Rate rate, robot_hardware::AcrobotHybrid* robot, 
                     controller_manager::ControllerManager* cm)
@@ -36,10 +39,18 @@ void controlThread(ros::Rate rate, robot_hardware::AcrobotHybrid* robot,
   robot->disable();
 }
 
+bool serviceCb(const ResetReq &req, ResetRes &res, robot_hardware::AcrobotHybrid* robot)
+{
+  robot->reset();
+  res.success = true;
+  return true;
+}
+
 int main(int argc, char* argv[])
 {
   // Initialize ROS node.
   ros::init(argc, argv, "robot_hardware_node");
+  ros::NodeHandle n("~");
   robot_hardware::AcrobotHybrid robot;
 
   // Create the serial rosserial server in a background ASIO event loop.
@@ -54,6 +65,9 @@ int main(int argc, char* argv[])
   int update_rate;
   ros::param::param<int>("control_loop_rate", update_rate, 1000);
   boost::thread(boost::bind(controlThread, ros::Rate(static_cast<double>(update_rate)), &robot, &cm));
+
+  // ROS pub/sub/services for main thread
+  ros::ServiceServer service = n.advertiseService<ResetReq,ResetRes>("clear_epos_faults", boost::bind(serviceCb, _1, _2, &robot));
 
   // Foreground ROS spinner for ROS callbacks, including rosserial, diagnostics
   ros::spin();

@@ -30,6 +30,8 @@ class CanopenMaster
         void getVelocity(double &val);
         void getPosition(double &val);
         void getCurrent(double &val);
+        void clearFaults();
+        void enableDevice();
     
     private:
         void init();

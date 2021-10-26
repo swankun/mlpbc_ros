@@ -50,6 +50,17 @@ void Epos2Ros::writeCurrent(const double cmd)
     ptr_co_->setCurrent(cmd*1000.0);
 }
 
+void Epos2Ros::clearErrors()
+{
+    ptr_co_->setCurrent(0.0);
+    ptr_co_->clearFaults();
+}
+
+void Epos2Ros::enableDevice()
+{
+    ptr_co_->enableDevice();
+}
+
 void Epos2Ros::disableDevice()
 {
     ptr_co_->setCurrent(0.0);

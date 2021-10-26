@@ -134,6 +134,22 @@ void CanopenMaster::getCurrent(double &val)
   val = static_cast<double>(raw);
 }
 
+void CanopenMaster::clearFaults()
+{
+  lely::canopen::SdoFuture<void> sdo_fut;
+  sdo_fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x6040, 0, 0x80, 2000ms);
+  wait_for(sdo_fut, 2000);
+}
+
+void CanopenMaster::enableDevice()
+{
+  lely::canopen::SdoFuture<void> sdo_fut;
+  sdo_fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x6040, 0, 0x06, 2000ms);
+  wait_for(sdo_fut, 2000);
+  sdo_fut = master_.AsyncWrite<uint16_t>(exec_, slave_id_, 0x6040, 0, 0x0f, 2000ms);
+  wait_for(sdo_fut, 2000);
+}
+
 bool CanopenMaster::wait_for(lely::canopen::SdoFuture<void> fut, const int timeout_ms)
 {
   size_t n = std::max(1, timeout_ms / 100);

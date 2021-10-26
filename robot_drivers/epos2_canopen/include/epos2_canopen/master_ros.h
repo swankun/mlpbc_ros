@@ -21,7 +21,9 @@ class Epos2Ros
         const double readPosition();
         const double readVelocity();
         const double readCurrent();
+        void clearErrors();
         void writeCurrent(const double cmd);
+        void enableDevice();
         void disableDevice();
 
     private:

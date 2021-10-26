@@ -71,4 +71,11 @@ void AcrobotHybrid::disable()
     epos_device_.disableDevice();
 }
 
+void AcrobotHybrid::reset()
+{
+    epos_device_.clearErrors();
+    epos_device_.writeCurrent(0.0);
+    epos_device_.enableDevice();
+}
+
 } // namespace

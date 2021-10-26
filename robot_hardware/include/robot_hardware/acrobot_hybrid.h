@@ -48,6 +48,8 @@ class AcrobotHybrid : public hardware_interface::RobotHW
          */
         void disable();
 
+        void reset();
+
 
     protected:
 

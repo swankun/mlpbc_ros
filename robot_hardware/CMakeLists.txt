@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rosserial_server
   sensor_msgs
+  std_msgs
   epos2_canopen
 )
 
