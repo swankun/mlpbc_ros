@@ -2,7 +2,7 @@
   
 <node pkg="ml_based_controllers" type="run.sh" name="iwp_controller" output="screen">
     <env name="JULIA_PROJECT" value="$(find ml_based_controllers)/julia" />
-    <env name="JULIA_DEPOT_PATH" value="$(find ml_based_controllers)/.julia" />
+    <env name="JULIA_DEPOT_PATH" value="$(find ml_based_controllers)/julia/.julia" />
 </node> 
 
 </launch>
