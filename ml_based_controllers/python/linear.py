@@ -17,7 +17,7 @@ class InertiaWheelPendulum(object):
     def __init__(
         self, m1=1.423, m2=0.577, lc1=0.17/3.0, 
         l1=0.17, I1=0.0, I2=0.00289, b1=0.00, b2=0.00,
-        gamma_1=3.0, gamma_2=30.0, kp=0.001, kv=0.1
+        gamma_1=6.0, gamma_2=20.0, kp=0.001, kv=0.1
     ):
         self.theta = [0.0, 0.0]
         self.theta_0 = [0.0, 0.0]
