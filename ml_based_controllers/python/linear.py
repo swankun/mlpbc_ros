@@ -68,6 +68,19 @@ class InertiaWheelPendulum(object):
 
         return u_es + u_di
 
+    def compute_energy_shaping(self):
+        q1 = self.theta[0] - pi
+        q2 = self.theta[1]
+        q1dot = self.theta_dot[0]
+        q2dot = self.theta_dot[1]
+        w1 = -0.09*2.0
+        w2 = 0.05*3.0
+        w3 = 0.0011375
+        w4 = -0.005
+        effort = w1*q1dot + w2*cos(q1)*q1dot + w3*q1dot**3 + w4*q2dot
+        return 2.0*effort
+        
+
     def compute_lqr(self):
         q1 = self.theta[0] #- self.theta_0[0] 
         q2 = self.theta[1] #- self.theta_0[1]
@@ -92,7 +105,8 @@ class InertiaWheelPendulum(object):
             return self.compute_lqr()
         else:
             self.catch_mode = False
-            return clip(self.compute_ida_pbc(), -0.21, 0.21)
+            # return clip(self.compute_ida_pbc(), -0.21, 0.21)
+            return self.compute_energy_shaping()
 
 def main():
 
