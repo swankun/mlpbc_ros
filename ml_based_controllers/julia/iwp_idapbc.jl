@@ -90,7 +90,7 @@ function energy_shaping_controller(x::Vector)
     return clamp(effort, -1.0, 1.0)
 end
 
-function idapbc_controller(P::IDAPBCProblem; kv=0.26)
+function idapbc_controller(P::IDAPBCProblem; kv=1)
     function (x::AbstractVector)
         q1, q2, q1dot, q2dot = x
         xbar = [
@@ -110,7 +110,7 @@ function main()
     pub = Publisher{Float64Msg}("theta2_controller/command", queue_size=1)
     sub = Subscriber{JointState}("/joint_states", update_state, (state,), queue_size=1)
     prob = load_idapbc_model()
-    u = idapbc_controller(prob, kv=1)
+    u = idapbc_controller(prob, kv=0.26)
     # u = energy_shaping_controller
     loop_rate = Rate(1000.0)
     while !is_shutdown()
