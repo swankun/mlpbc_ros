@@ -1,38 +1,40 @@
 using MLBasedESC
 using LinearAlgebra
 
-const PRECISION = Float64
-const I1 = PRECISION(0.0455)
-const I2 = PRECISION(0.00425)
-const m3 = PRECISION(0.183*9.81)
-const b1 = PRECISION(0.001)
-const b2 = PRECISION(0.002)
+import MLBasedESC.Flux
+import MLBasedESC.Flux.NNlib
+using MLBasedESC.Flux: Chain, Dense, elu
 
-function create_true_hamiltonian()
-    mass_inv = inv(diagm(vcat(I1, I2)))
-    pe(q) = m3*(cos(q[1])-one(eltype(q)))
-    Hamiltonian(mass_inv, pe)
+import MLBasedESC.DiffEqFlux
+using MLBasedESC.DiffEqFlux: FastChain, FastDense
+
+const I1 = 0.0455
+const I2 = 0.00425
+const m3 = 0.183*9.81
+const M⁻¹ = inv(diagm([I1, I2]))
+V(q) = [ m3*(cos(q[1]) - 1.0) ]
+MLBasedESC.jacobian(::typeof(V), q) = [-m3*sin(q[1]), zero(eltype(q))]
+const G = [-1.0, 1.0]
+const G⊥ = [1.0 1.0]
+
+function build_idapbc_model()
+    Md⁻¹ = PSDMatrix(2)
+    Vd = Chain(
+        Dense(2, 10, elu; bias=false),
+        Dense(10, 10, elu; bias=false),
+        Dense(10, 1, square; bias=false),
+    )
+    P = IDAPBCProblem(2,M⁻¹,Md⁻¹,V,Vd,G,G⊥)
 end
 
-function create_learning_hamiltonian()
-    massd_inv = PSDMatrix(PRECISION,2,2)
-    vd = NeuralNetwork(PRECISION, [2,16,48,1], symmetric=true, fout=x->x.^2, dfout=x->2x)
-    Hamiltonian(massd_inv, vd)
+function idapbc_controller(P::IDAPBCProblem; kv=1)
+    function (x::AbstractVector)
+        u = controller(P, x, kv=kv)
+        clamp(u, -1.5, 1.5)
+    end
 end
 
-function create_ida_pbc_problem()
-    input = PRECISION[-1.0,1.0]
-    input_annihilator = PRECISION[1.0 1.0]
-    ham = create_true_hamiltonian()
-    hamd = create_learning_hamiltonian()
-    IDAPBCProblem(ham, hamd, input, input_annihilator)
-end
-
-#t = @elapsed begin
-    prob = create_ida_pbc_problem()
-    θ = MLBasedESC.params(prob)
-    u = controller(prob, θ, damping_gain=1e-3)
-#end
-
-#@info "Finished loading script in $t seconds."
-
+prob = build_idapbc_model()
+u = idapbc_controller(prob, kv=0.26)
+x = [3.,0,0,0]
+effort = u(x)

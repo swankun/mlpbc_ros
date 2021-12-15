@@ -18,11 +18,6 @@ using MLBasedESC.DiffEqFlux: FastChain, FastDense
 
 import BSON
 
-const I1 = 0.0455
-const I2 = 0.00425
-const m3 = 0.183*9.81
-
-
 #==============================================================================
 Constants
 ==============================================================================#
@@ -72,11 +67,16 @@ end
 function compute_control(x::Vector, swingup_controller::Function)
     effort = 0.0
     q1, q2, q1dot, q2dot = x
+    xbar = [
+        rem2pi(q1-pi, RoundNearest)
+        rem2pi(q2, RoundNearest)
+        q1dot
+        q2dot
+    ]
     if (1-cos(q1-pi)) < (1-cosd(15)) && abs(q1dot) < 5.0
-        xbar = [sin(q1-pi), sin(q2), q1dot, q2dot]
         effort = -dot(LQR, xbar)        
     else
-        effort = swingup_controller(x)
+        effort = swingup_controller(xbar)
     end
     return clamp(effort, -1.5, 1.5)
 end
@@ -92,14 +92,7 @@ end
 
 function idapbc_controller(P::IDAPBCProblem; kv=1)
     function (x::AbstractVector)
-        q1, q2, q1dot, q2dot = x
-        xbar = [
-            rem2pi(q1-pi, RoundNearest)
-            rem2pi(q2, RoundNearest)
-            q1dot
-            q2dot
-        ]
-        u = controller(P, xbar, kv=kv)
+        u = controller(P, x, kv=kv)
         clamp(u, -1.5, 1.5)
     end
 end
