@@ -73,8 +73,20 @@ void AcrobotHybrid::disable()
 
 void AcrobotHybrid::reset()
 {
+    joints_[0].position = joints_[0].home;
+    joints_[1].position = joints_[1].home;
     epos_device_.clearErrors();
     epos_device_.writeCurrent(0.0);
+    epos_device_.enableDevice();
+}
+
+void AcrobotHybrid::disableOperation()
+{
+    epos_device_.disableOperation();
+}
+
+void AcrobotHybrid::enableDevice()
+{
     epos_device_.enableDevice();
 }
 

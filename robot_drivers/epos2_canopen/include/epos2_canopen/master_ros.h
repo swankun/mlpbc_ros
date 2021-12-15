@@ -25,6 +25,7 @@ class Epos2Ros
         void writeCurrent(const double cmd);
         void enableDevice();
         void disableDevice();
+        void disableOperation();
 
     private:
         std::unique_ptr<CanopenMaster> ptr_co_;

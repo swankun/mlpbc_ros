@@ -50,6 +50,10 @@ class AcrobotHybrid : public hardware_interface::RobotHW
 
         void reset();
 
+        void enableDevice();
+
+        void disableOperation();
+
 
     protected:
 

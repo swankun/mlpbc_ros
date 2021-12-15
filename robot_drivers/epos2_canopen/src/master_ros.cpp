@@ -61,6 +61,11 @@ void Epos2Ros::enableDevice()
     ptr_co_->enableDevice();
 }
 
+void Epos2Ros::disableOperation()
+{
+    ptr_co_->disableOperation();
+}
+
 void Epos2Ros::disableDevice()
 {
     ptr_co_->setCurrent(0.0);

@@ -45,6 +45,18 @@ bool serviceCb(const ResetReq &req, ResetRes &res, robot_hardware::AcrobotHybrid
   res.success = true;
   return true;
 }
+bool disableCb(const ResetReq &req, ResetRes &res, robot_hardware::AcrobotHybrid* robot)
+{
+  robot->disableOperation();
+  res.success = true;
+  return true;
+}
+bool enableCb(const ResetReq &req, ResetRes &res, robot_hardware::AcrobotHybrid* robot)
+{
+  robot->enableDevice();
+  res.success = true;
+  return true;
+}
 
 int main(int argc, char* argv[])
 {
@@ -67,7 +79,9 @@ int main(int argc, char* argv[])
   boost::thread(boost::bind(controlThread, ros::Rate(static_cast<double>(update_rate)), &robot, &cm));
 
   // ROS pub/sub/services for main thread
-  ros::ServiceServer service = n.advertiseService<ResetReq,ResetRes>("clear_epos_faults", boost::bind(serviceCb, _1, _2, &robot));
+  ros::ServiceServer service_reset = n.advertiseService<ResetReq,ResetRes>("clear_epos_faults", boost::bind(serviceCb, _1, _2, &robot));
+  ros::ServiceServer service_disable = n.advertiseService<ResetReq,ResetRes>("disable_epos", boost::bind(disableCb, _1, _2, &robot));
+  ros::ServiceServer service_enable = n.advertiseService<ResetReq,ResetRes>("enable_epos", boost::bind(enableCb, _1, _2, &robot));
 
   // Foreground ROS spinner for ROS callbacks, including rosserial, diagnostics
   ros::spin();

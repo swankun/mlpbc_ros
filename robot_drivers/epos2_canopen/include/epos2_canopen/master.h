@@ -32,6 +32,7 @@ class CanopenMaster
         void getCurrent(double &val);
         void clearFaults();
         void enableDevice();
+        void disableOperation();
     
     private:
         void init();
