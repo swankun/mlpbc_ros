@@ -78,7 +78,7 @@ function compute_control(x::Vector, swingup_controller::Function)
     else
         effort = swingup_controller(x)
     end
-    return clamp(effort, -2.0, 2.0)
+    return clamp(effort, -1.5, 1.5)
 end
 
 function energy_shaping_controller(x::Vector)
@@ -90,7 +90,7 @@ function energy_shaping_controller(x::Vector)
     return clamp(effort, -1.0, 1.0)
 end
 
-function idapbc_controller(P::IDAPBCProblem; kv=1)
+function idapbc_controller(P::IDAPBCProblem; kv=0.26)
     function (x::AbstractVector)
         q1, q2, q1dot, q2dot = x
         xbar = [
@@ -100,7 +100,7 @@ function idapbc_controller(P::IDAPBCProblem; kv=1)
             q2dot
         ]
         u = controller(P, xbar, kv=kv)
-        clamp(u, -1.0, 1.0)
+        clamp(u, -1.5, 1.5)
     end
 end
 
