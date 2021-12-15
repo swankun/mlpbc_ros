@@ -47,7 +47,7 @@ IDAPBC
 ==============================================================================#
 
 function load_idapbc_model()
-    BSON.@load "model.bson" θ
+    BSON.@load "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/model.bson" θ
     Md⁻¹ = PSDMatrix(2, ()->θ[1:4])
     _, re = Chain(
         Dense(2, 10, elu; bias=false),
@@ -71,8 +71,8 @@ end
 
 function compute_control(x::Vector, swingup_controller::Function)
     effort = 0.0
-    if (1+cos(q1)) < (1+cosd(15)) && abs(q1dot) < 5.0
-        q1, q2, q1dot, q2dot = x
+    q1, q2, q1dot, q2dot = x
+    if (1-cos(q1-pi)) < (1-cosd(15)) && abs(q1dot) < 5.0
         xbar = [sin(q1-pi), sin(q2), q1dot, q2dot]
         effort = -dot(LQR, xbar)        
     else
@@ -92,8 +92,15 @@ end
 
 function idapbc_controller(P::IDAPBCProblem; kv=1)
     function (x::AbstractVector)
-        xbar = [rem2pi.(x[1:2], RoundNearest); x[3:end]]
-        controller(P, xbar, kv=kv)
+        q1, q2, q1dot, q2dot = x
+        xbar = [
+            rem2pi(q1-pi, RoundNearest)
+            rem2pi(q2, RoundNearest)
+            q1dot
+            q2dot
+        ]
+        u = controller(P, xbar, kv=kv)
+        clamp(u, -1.0, 1.0)
     end
 end
 
@@ -103,9 +110,9 @@ function main()
     pub = Publisher{Float64Msg}("theta2_controller/command", queue_size=1)
     sub = Subscriber{JointState}("/joint_states", update_state, (state,), queue_size=1)
     prob = load_idapbc_model()
-    u = idapbc_controller(P, kv=1)
+    u = idapbc_controller(prob, kv=1)
     # u = energy_shaping_controller
-    loop_rate = Rate(500.0)
+    loop_rate = Rate(1000.0)
     while !is_shutdown()
         header = std_msgs.msg.Header()
         header.stamp = RobotOS.now()
