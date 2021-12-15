@@ -1,0 +1,8 @@
+<launch>
+  
+    <arg name="seconds" default="20" />
+
+    <node pkg="rosbag" if="$(arg record)" required="true" type="record" name="record_states" 
+        args="/joint_states -o $(find ml_based_controllers)/bag/joint_states --duration=$(arg seconds)s" />
+
+</launch>

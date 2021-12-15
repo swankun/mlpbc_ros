@@ -1,6 +1,5 @@
 [deps]
 BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 MLBasedESC = "0d2b134a-22b1-4965-bb14-6de4eebc6429"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 RobotOS = "22415677-39a4-5241-a37a-00beabbbdae8"
