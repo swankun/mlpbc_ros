@@ -79,7 +79,7 @@ function compute_control(x::Vector, swingup_controller::Function)
     else
         effort = swingup_controller(xbar)
     end
-    return clamp(effort, -1.25, 1.25)
+    return clamp(effort, -1.5, 1.5)
 end
 
 function energy_shaping_controller(x::Vector)
@@ -104,7 +104,7 @@ function main()
     pub = Publisher{Float64Msg}("theta2_controller/command", queue_size=1)
     sub = Subscriber{JointState}("/joint_states", update_state, (state,), queue_size=1)
     prob = load_idapbc_model()
-    idapbc = idapbc_controller(prob, kv=0.025, umax=0.85)
+    idapbc = idapbc_controller(prob, kv=0.03, umax=0.85)
     # u = energy_shaping_controller
     loop_rate = Rate(1000.0)
     while !is_shutdown()
