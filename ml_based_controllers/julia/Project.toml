@@ -1,5 +1,8 @@
 [deps]
 BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+DistributionsAD = "ced4e74d-a319-5a8a-b0ac-84af2272839c"
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 MLBasedESC = "0d2b134a-22b1-4965-bb14-6de4eebc6429"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 RobotOS = "22415677-39a4-5241-a37a-00beabbbdae8"

@@ -18,6 +18,8 @@ using MLBasedESC.DiffEqFlux: FastChain, FastDense
 
 import BSON
 
+include("hardware_functions.jl")
+
 #==============================================================================
 Constants
 ==============================================================================#
@@ -103,14 +105,17 @@ function main()
     state = zeros(Float64,4)
     pub = Publisher{Float64Msg}("theta2_controller/command", queue_size=1)
     sub = Subscriber{JointState}("/joint_states", update_state, (state,), queue_size=1)
-    prob = load_idapbc_model()
-    idapbc = idapbc_controller(prob, kv=0.03, umax=0.85)
+    # prob = load_idapbc_model()
+    # idapbc = idapbc_controller(prob, kv=0.001, umax=1.5)
+    # bidapbc = map_controller(Bays_params(Float32), kv=0.5, umax=1.5)
+    bidapbc = marginalized_controller(Bays_params(Float32), 1, 0.001, umax=1.5)
     # u = energy_shaping_controller
     loop_rate = Rate(1000.0)
     while !is_shutdown()
         header = std_msgs.msg.Header()
         header.stamp = RobotOS.now()
-        effort = compute_control(state, idapbc)
+        # effort = compute_control(state, idapbc)
+        effort = compute_control(state, bidapbc)
         # effort = clamp(effort, -2.0, 2.0)
         gear_ratio = 1.0
         eta = 0.98
