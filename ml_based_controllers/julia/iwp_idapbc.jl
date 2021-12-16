@@ -108,7 +108,7 @@ function main()
     # prob = load_idapbc_model()
     # idapbc = idapbc_controller(prob, kv=0.001, umax=1.5)
     # bidapbc = map_controller(Bays_params(Float32), kv=0.5, umax=1.5)
-    bidapbc = marginalized_controller(Bays_params(Float32), 1, 0.001, umax=1.5)
+    bidapbc = marginalized_controller(Bays_params(Float32), 1, 0.001, umax=0.5)
     # u = energy_shaping_controller
     loop_rate = Rate(1000.0)
     while !is_shutdown()
