@@ -44,7 +44,7 @@ IDAPBC
 ==============================================================================#
 
 function load_idapbc_model()
-    BSON.@load "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/model2.bson" θ
+    BSON.@load "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/neuralidapbc_01.bson" θ
     Md⁻¹ = PSDMatrix(2, ()->θ[1:4])
     _, re = Chain(
         Dense(2, 10, elu; bias=false),
@@ -53,6 +53,25 @@ function load_idapbc_model()
     ) |> Flux.destructure
     Vd = re(θ[5:end])
     P = IDAPBCProblem(2,M⁻¹,Md⁻¹,V,Vd,G,G⊥)
+end
+
+#==============================================================================
+PBC
+==============================================================================#
+
+function load_pbc_model(;umax=0.5)
+    BSON.@load "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/neuralpbc_02.bson" ps
+    Hd = FastChain(
+        FastDense(6, 10, elu, bias=true),
+        FastDense(10, 5, elu, bias=true),
+        FastDense(5, 1, bias=true)
+    )
+    pbc = NeuralPBC(6,Hd)
+    policy(x::AbstractVector) = begin
+        xbar = [sin(x[1]), cos(x[1]), sin(x[2]), cos(x[2]), x[3], x[4]]
+        return clamp(pbc(xbar, ps) / 1, -umax, umax)
+    end
+    return policy
 end
 
 #==============================================================================
@@ -75,11 +94,11 @@ function compute_control(x::Vector, swingup_controller::Function)
         q1dot
         q2dot
     ]
-    if (1-cos(q1-pi)) < (1-cosd(15)) && abs(q1dot) < 10.0
+    if (1-cos(q1-pi)) < (1-cosd(30)) && abs(q1dot) < 2pi
         xbar[2] = sin(q2)
         effort = -dot(LQR, xbar)        
     else
-        effort = swingup_controller(xbar)
+        effort = swingup_controller([x[1]-pi; x[2:end]])
     end
     return clamp(effort, -1.5, 1.5)
 end
@@ -105,18 +124,17 @@ function main()
     state = zeros(Float64,4)
     pub = Publisher{Float64Msg}("theta2_controller/command", queue_size=1)
     sub = Subscriber{JointState}("/joint_states", update_state, (state,), queue_size=1)
-    # prob = load_idapbc_model()
-    # idapbc = idapbc_controller(prob, kv=0.001, umax=0.3)
-    # bidapbc = map_controller(Bays_params(Float32), kv=0.5, umax=1.5)
-    bidapbc = marginalized_controller(Bays_params(Float32), 1, 0.001, umax=0.325)
-    # u = energy_shaping_controller
+    # policy = idapbc_controller(load_idapbc_model(), kv=0.001, umax=0.3)
+    policy = load_pbc_model(umax=0.25)
+    # policy = energy_shaping_controller
+    # policy = map_controller(Bays_params(Float32), kv=0.5, umax=1.5)
+    # policy = marginalized_controller(Bays_params(Float32), 1, 0.001, umax=0.325)
+    # policy = map_controller(Bays_params(Float32))
     loop_rate = Rate(1000.0)
     while !is_shutdown()
         header = std_msgs.msg.Header()
         header.stamp = RobotOS.now()
-        # effort = compute_control(state, idapbc)
-        effort = compute_control(state, bidapbc)
-        # effort = clamp(effort, -2.0, 2.0)
+        effort = compute_control(state, policy)
         gear_ratio = 1.0
         eta = 0.98
         k_tau = 0.230    # N-m/a

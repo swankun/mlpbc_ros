@@ -1,15 +1,14 @@
 using Distributions, DistributionsAD
 import LogExpFunctions
 
-const I1    = 0.0455
-const I2    = 0.00425
-const m3    = 0.183*9.81
-const M⁻¹   = inv(diagm([I1, I2]))
-V(q)        = [ m3*(cos(q[1]) - 1.0) ]
-const G     = [-1.0, 1.0]
-const G⊥    = [1.0 1.0]
-const Vdmax = 24.94412861168683
-MLBasedESC.jacobian(::typeof(V), q) = [-m3*sin(q[1]), zero(eltype(q))]
+const I1 = 0.0455
+const I2 = 0.00425
+const m3 = 0.183*9.81
+const b1 = 1/1000
+const b2 = 5/1000
+const M⁻¹ = inv(diagm([I1, I2]))
+const G = [-1.0, 1.0]
+const G⊥ = [1.0 1.0]
 
 const LQR   = [
                 -7.409595362575457
@@ -18,74 +17,63 @@ const LQR   = [
                 -0.03665716263249201
             ]
 
-mutable struct Bays_params{T, TIDAPBC}
-    θv              ::Vector{T}
-    θv_mean         ::Vector{T}
-    θv_σ            ::Vector{T}
-    wm              ::Vector{T}
-    P               ::TIDAPBC
+mutable struct Bays_params{T, TPBC}
+    θh_mean         ::Vector{T}
+    θh_σ            ::Vector{T}
+    θα_mean         ::Vector{T}
+    θα_σ            ::Vector{T}
+    pbc             ::TPBC
 end
 
 function Bays_params(T)
 
-    loaded      = BSON.load("/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/iwp_bw2.bson")
-    θv          = loaded[:v]            #a vector of means and standard deviations
-    V_size      = Int(length(θv)/2)
+    loaded      = BSON.load("/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/bays_ode_hardware.bson")
+    θhα         = loaded[:hα]            #a vector of means and standard deviations
+    hα_size     = Int(length(θhα)/2)
 
-    θv_mean     = θv[1 : V_size]
-    θv_σ        = θv[V_size + 1 : end]
-    # wm          = [ 10.699861526489258, 0.0, 0.0, 6.656222343444824]
-    wm          = Float32[32.14794, 0.0, 0.0, 21.512499]
+    Nα          = 6
+    Ns          = 0         #Note: s is not learned. 
 
-    Mdinv       = PSDMatrix(2, () -> wm)
-    Vd          = FastChain(
-                    FastDense(2, 10, elu; bias=false),
-                    FastDense(10, 10, elu; bias=false),
-                    FastDense(10, 1, scaledShifthardσ; bias=false),
+    θh_mean     = θhα[1 : hα_size-Nα]
+    θα_mean     = θhα[hα_size-Nα+1 : hα_size]
+    θh_σ        = θhα[hα_size + 1 : 2hα_size - Nα]
+    θα_σ        = θhα[2hα_size - Nα + 1 : 2hα_size]
+
+    Hd          = FastChain(
+                    FastDense(6, 10, elu; bias=true),
+                    FastDense(10, 5, elu; bias=true),
+                    FastDense(5, 1 ; bias=true),
                     )
 
-    P           = IDAPBCProblem(2,M⁻¹,Mdinv,V,Vd,G,G⊥)
-    Bays_params{T, typeof(P)}(θv, θv_mean, θv_σ, wm, P)
-end
-
-shifted_hardσ(x) = Flux.hardσ(x - 3.0)
-dshiftedhardσ(x) = abs(x-3) <= 3.0 ? 1/6 : 0.0  
-MLBasedESC.derivative(:: typeof(shifted_hardσ)) = dshiftedhardσ
-
-scaledShifthardσ(x) = Vdmax.*shifted_hardσ(x)
-dscaledShiftedhardσ(x) = abs(x-3) <= 3.0 ? Vdmax/6.0 : 0.0  
-MLBasedESC.derivative(:: typeof(scaledShifthardσ)) = dscaledShiftedhardσ
-
-function map_controller(bp::Bays_params; kv=1, umax=1.5)
-
-    p = vcat(bp.wm, bp.θv_mean)
-
-    function u_map(x::AbstractVector)
-        u       = controller(bp.P, x, p, kv=kv)
-        clamp(u, -umax, umax)
-    end
+    pbc         = MLBasedESC.NeuralPBC(Nα, Hd)
+    Bays_params{T, typeof(pbc)}(θh_mean, θh_σ, θα_mean, θα_σ, pbc)
 end
 
 function getq(bp::Bays_params)
 
-    return arraydist( map((μ, σ) -> Normal(μ, LogExpFunctions.softplus(σ)), bp.θv_mean, bp.θv_σ) )
+    return arraydist( map((μ, σ) -> Normal(μ, LogExpFunctions.softplus(σ)), vcat(bp.θh_mean, bp.θα_mean), vcat(bp.θh_σ, bp.θα_σ) ))
 
 end
 
-function marginalized_controller(bp::Bays_params, sample_num, kv=1; umax=1.5)
-    V_size = length(bp.θv_mean)
+function map_controller(bp::Bays_params)
+
+    p = vcat(bp.θh_mean, bp.θα_mean)
+
+    function u_map(x::AbstractVector)
+        xbar = [sin(x[1]), cos(x[1]), sin(x[2]), cos(x[2]), x[3], x[4]]
+        u  = 3bp.pbc(xbar, p)/2
+    end
+end
+
+function marginalized_controller(bp::Bays_params, sample_num)
 
     function u_marge(x)
-        posterior       = getq(bp)
-        W               = rand(posterior, sample_num)
-        input           = 0.0
-
-        for i in 1:sample_num 
-            ws          = W[:,i]
-            w           = vcat(bp.wm, ws[1:V_size])
-            input       += controller(bp.P, [rem2pi.(x[1:2], RoundNearest); x[3:end]], w, kv=kv)
-        end
-
-        return clamp(input/sample_num, -umax, umax)
+        xbar = [sin(x[1]), cos(x[1]), sin(x[2]), cos(x[2]), x[3], x[4]]
+        effort = 0.0 
+            for _ in 1:sample_num
+                ps = rand(getq(bp))       
+                effort  += bp.pbc(xbar, ps)
+            end
+        return effort/sample_num
     end
 end

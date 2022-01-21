@@ -10,17 +10,6 @@
 <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false"
     output="screen" args="joint_state_controller theta2_controller"/>
 
-<node if="$(arg telop)" name="twist_to_torque" pkg="topic_tools" type="relay_field" 
-    args="--wait-for-start /twist_to_torque_teleop /theta2_controller/command std_msgs/Float64 'data: m.linear.x'" />
+<include if="$(arg telop)" file="$(find robot_hardware)/launch/teleop.launch" />
 
-<node if="$(arg telop)" name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
-    <param name="default_topic" value="/twist_to_torque_teleop" />
-    <param name="default_vx_max" value="1.0" />
-    <param name="default_vx_min" value="-1.0" />
-</node>
-
-<!-- <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" launch-prefix="xterm -e">
-    <remap from="/cmd_vel" to="/twist_to_torque_teleop" />
-</node> -->
-
-</launch>
+</launch> 

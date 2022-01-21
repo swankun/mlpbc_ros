@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 lib/rosserial_arduino
+lib/ros_lib
