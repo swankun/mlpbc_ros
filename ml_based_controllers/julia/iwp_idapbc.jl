@@ -44,7 +44,7 @@ IDAPBC
 ==============================================================================#
 
 function load_idapbc_model()
-    BSON.@load "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/neuralidapbc_01.bson" θ
+    BSON.@load "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/model2.bson" θ
     Md⁻¹ = PSDMatrix(2, ()->θ[1:4])
     _, re = Chain(
         Dense(2, 10, elu; bias=false),
@@ -68,7 +68,7 @@ function load_pbc_model(;umax=0.5)
     )
     pbc = NeuralPBC(6,Hd)
     policy(x::AbstractVector) = begin
-        xbar = [sin(x[1]), cos(x[1]), sin(x[2]), cos(x[2]), x[3], x[4]]
+        xbar = [sincos(x[1]-pi)...; sincos(x[2])...; x[3]; x[4]]
         return clamp(pbc(xbar, ps) / 1, -umax, umax)
     end
     return policy
@@ -88,17 +88,16 @@ end
 function compute_control(x::Vector, swingup_controller::Function)
     effort = 0.0
     q1, q2, q1dot, q2dot = x
-    xbar = [
-        rem2pi(q1-pi, RoundNearest)
-        rem2pi(q2, RoundNearest)
-        q1dot
-        q2dot
-    ]
-    if (1-cos(q1-pi)) < (1-cosd(30)) && abs(q1dot) < 2pi
-        xbar[2] = sin(q2)
-        effort = -dot(LQR, xbar)        
+    if (1-cos(q1-pi)) < (1-cosd(30)) && abs(q1dot) < 5
+        xbar = [
+            rem2pi(q1-pi, RoundNearest)
+            rem2pi(q2, RoundNearest)
+            q1dot
+            q2dot
+        ]
+        effort = -dot(LQR, xbar)
     else
-        effort = swingup_controller([x[1]-pi; x[2:end]])
+        effort = swingup_controller(x)
     end
     return clamp(effort, -1.5, 1.5)
 end
@@ -114,7 +113,13 @@ end
 
 function idapbc_controller(P::IDAPBCProblem; kv=1, umax=1.5)
     function (x::AbstractVector)
-        u = controller(P, x, kv=kv)
+        xbar = [
+            rem2pi(x[1]-pi, RoundNearest)
+            rem2pi(x[2], RoundNearest)
+            x[3]
+            x[4]
+        ]
+        u = controller(P, xbar, kv=kv)
         clamp(u, -umax, umax)
     end
 end
@@ -124,12 +129,13 @@ function main()
     state = zeros(Float64,4)
     pub = Publisher{Float64Msg}("theta2_controller/command", queue_size=1)
     sub = Subscriber{JointState}("/joint_states", update_state, (state,), queue_size=1)
-    # policy = idapbc_controller(load_idapbc_model(), kv=0.001, umax=0.3)
+    # policy = idapbc_controller(load_idapbc_model(), kv=0.001, umax=0.8)
     policy = load_pbc_model(umax=0.25)
     # policy = energy_shaping_controller
     # policy = map_controller(Bays_params(Float32), kv=0.5, umax=1.5)
     # policy = marginalized_controller(Bays_params(Float32), 1, 0.001, umax=0.325)
     # policy = map_controller(Bays_params(Float32))
+    # policy = marginalized_controller(Bays_params(Float32), 1)
     loop_rate = Rate(1000.0)
     while !is_shutdown()
         header = std_msgs.msg.Header()
