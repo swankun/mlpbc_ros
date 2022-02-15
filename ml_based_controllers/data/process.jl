@@ -11,43 +11,101 @@ using CSV
 using CairoMakie
 using LaTeXStrings
 
+
+function default_plot_theme()
+    majorfontsize = 36*1.5
+    minorfontsize = 24*1.5
+    T = Theme(
+        Axis = (
+            xlabelfont="CMU Serif",
+            ylabelfont="CMU Serif",
+            xticklabelfont="CMU Serif",
+            yticklabelfont="CMU Serif",
+            titlefont="CMU Serif",
+            xlabelsize=minorfontsize,
+            ylabelsize=minorfontsize,
+            xticklabelsize=minorfontsize,
+            yticklabelsize=minorfontsize,
+            titlesize=majorfontsize,
+            topspinevisible = false,
+            rightspinevisible = false,
+            xgridvisible = false,
+            ygridvisible = false,
+        ),
+        Lines = (
+            linewidth = 2.5,
+        ),
+        Legend = (
+            labelfont = "CMU Serif",
+            labelsize = minorfontsize
+        )
+    )
+    set_theme!(T)
+end
+
 function getdf()
     file = CSV.File("20220121/05.csv", ignoreemptyrows=true)
     return DataFrame(file)
 end
 
-function theta1(raw::DataFrame, fig::Figure=Figure())
-    pos = filter!(!ismissing, raw."/joint_states/theta1/position")
-    t = filter!(!ismissing, raw."/joint_states/header/stamp")
-    t .-= t[1]
-    lines!(t, pos .- pi)
+Base.iszero(tf::Tuple) = false
+function trimafter!(tf::Real, t, x...)
+    i0 = findfirst(τ->τ≥tf, t)
+    i1 = lastindex(t)
+    deleteat!(t, i0:i1)
+    foreach(x) do y
+        deleteat!(y, i0:i1)
+    end
 end
-function theta1dot(raw::DataFrame, fig::Figure=Figure())
-    vel = filter!(!ismissing, raw."/joint_states/theta1/velocity")
-    t = filter!(!ismissing, raw."/joint_states/header/stamp")
+function trimafter!(tspan::Tuple, t, x...)
+    t0, tf = tspan
+    i0 = findlast(τ->τ≤t0, t)
+    i1 = findfirst(τ->τ≥tf, t)
+    i2 = lastindex(t)
+    deleteat!(t, vcat(1:i0, i1:i2))
     t .-= t[1]
-    lines!(t, vel)
+    foreach(x) do y
+        deleteat!(y, vcat(1:i0, i1:i2))
+    end
 end
 
-function theta2(raw::DataFrame, fig::Figure=Figure())
-    pos = filter!(!ismissing, raw."/joint_states/theta2/position")
-    t = filter!(!ismissing, raw."/joint_states/header/stamp")
+function theta1(raw::DataFrame, fig::Figure=Figure(); tf=0, kwargs...)
+    pos = filter(!ismissing, raw."/joint_states/theta1/position")
+    t = filter(!ismissing, raw."/joint_states/header/stamp")
     t .-= t[1]
-    lines!(t, pos)
+    !iszero(tf) && trimafter!(tf, t, pos)
+    lines!(t, pos .- pi; kwargs...)
 end
-function theta2dot(raw::DataFrame, fig::Figure=Figure())
-    vel = filter!(!ismissing, raw."/joint_states/theta2/velocity")
-    t = filter!(!ismissing, raw."/joint_states/header/stamp")
+function theta1dot(raw::DataFrame, fig::Figure=Figure(); tf=0, kwargs...)
+    vel = filter(!ismissing, raw."/joint_states/theta1/velocity")
+    t = filter(!ismissing, raw."/joint_states/header/stamp")
     t .-= t[1]
-    lines!(t, vel)
+    !iszero(tf) && trimafter!(tf, t, vel)
+    lines!(t, vel; kwargs...)
 end
-function effort(raw::DataFrame, fig::Figure=Figure())
-    u = filter!(!ismissing, raw."/joint_states/theta2/effort")
-    t = filter!(!ismissing, raw."/joint_states/header/stamp")
+
+function theta2(raw::DataFrame, fig::Figure=Figure(); tf=0, kwargs...)
+    pos = filter(!ismissing, raw."/joint_states/theta2/position")
+    t = filter(!ismissing, raw."/joint_states/header/stamp")
     t .-= t[1]
+    !iszero(tf) && trimafter!(tf, t, pos)
+    lines!(t, pos; kwargs...)
+end
+function theta2dot(raw::DataFrame, fig::Figure=Figure(); tf=0, kwargs...)
+    vel = filter(!ismissing, raw."/joint_states/theta2/velocity")
+    t = filter(!ismissing, raw."/joint_states/header/stamp")
+    t .-= t[1]
+    !iszero(tf) && trimafter!(tf, t, vel)
+    lines!(t, vel; kwargs...)
+end
+function effort(raw::DataFrame, fig::Figure=Figure(); tf=0, kwargs...)
+    u = filter(!ismissing, raw."/joint_states/theta2/effort")
+    t = filter(!ismissing, raw."/joint_states/header/stamp")
+    t .-= t[1]
+    !iszero(tf) && trimafter!(tf, t, u)
     u *= 0.23
     u = clamp.(u, -0.25, 0.25)
-    lines!(t, u)
+    lines!(t, u; kwargs...)
 end
 
 
@@ -64,20 +122,21 @@ end
 
 wrap(x) = [sin(x[1]); cos(x[1]); sin(x[2]); cos(x[2]); x[3]; x[4]]
 
-function hamil(raw::DataFrame, pbc::MLBasedESC.NeuralPBC, ps, fig::Figure=Figure())
-    q1 = filter!(!ismissing, raw."/joint_states/theta1/position")
-    q2 = filter!(!ismissing, raw."/joint_states/theta2/position")
-    q1dot = filter!(!ismissing, raw."/joint_states/theta1/velocity")
-    q2dot = filter!(!ismissing, raw."/joint_states/theta2/velocity")
-    t = filter!(!ismissing, raw."/joint_states/header/stamp")
+function hamil(raw::DataFrame, pbc::MLBasedESC.NeuralPBC, ps, fig::Figure=Figure(); tf=0, kwargs...)
+    q1 = filter(!ismissing, raw."/joint_states/theta1/position")
+    q2 = filter(!ismissing, raw."/joint_states/theta2/position")
+    q1dot = filter(!ismissing, raw."/joint_states/theta1/velocity")
+    q2dot = filter(!ismissing, raw."/joint_states/theta2/velocity")
+    t = filter(!ismissing, raw."/joint_states/header/stamp")
     t .-= t[1]
     traj = Float64.( mapreduce(permutedims, vcat, (q1.-pi, q2, q1dot, q2dot)) )
     trajwrap = mapreduce(wrap, hcat, eachcol(traj))
     Hd = map(x->pbc.Hd(x,ps)[1], eachcol(trajwrap))
-    lines!(t, Hd)
+    !iszero(tf) && trimafter!(tf, t, Hd)
+    lines!(t, Hd; kwargs...)
 end
 
-function evolution(raw::DataFrame)
+function evolution(raw::DataFrame; tf=0)
     fig = Figure()
     recipes = (theta1, theta2, theta1dot, theta2dot)
     labels = ("q1","q2","q1dot","q2dot")
@@ -86,26 +145,26 @@ function evolution(raw::DataFrame)
         f(raw, fig)
     end
     Axis(fig[3,1], title="u")
-    effort(raw, fig)
+    effort(raw, fig, tf=tf)
     Axis(fig[3,2], title="Hd")
-    hamil(raw, loadpbc("../julia/neuralpbc_02.bson")..., fig)
+    hamil(raw, loadpbc("../julia/neuralpbc_02.bson")..., fig, tf=tf)
     save("plots/out.png", fig)
 end
 
-function q1_u(raw::DataFrame)
-    fig = Figure()
-    Axis(fig[1,1], title="θ_1")
-    theta1(raw, fig)
-    Axis(fig[2,1], title="Control effort")
-    effort(raw, fig)
+function q1_u(raw::DataFrame; tf=0)
+    fig = Figure(resolution=(1200,600))
+    Axis(fig[1,1], title=L"Pendulum angle $\theta_{1}$")
+    theta1(raw, fig, tf=tf, color=:black)
+    Axis(fig[1,2], title=L"Control effort $u$")
+    effort(raw, fig, tf=tf, color=:black)
     save("plots/out.png", fig)
 end
 
-function q1_q2(raw::DataFrame)
-    fig = Figure()
-    Axis(fig[1,1], title="theta_1")
-    theta1(raw, fig)
-    Axis(fig[2,1], title="theta_2")
-    theta2(raw, fig)
+function q1_q2(raw::DataFrame; tf=0)
+    fig = Figure(resolution=(1200,400))
+    Axis(fig[1,1], title=L"Pendulum angle $\theta_{1}$")
+    theta1(raw, fig, tf=tf, color=:black)
+    Axis(fig[1,2], title=L"Rotor angle $\theta_{2}$")
+    theta2(raw, fig, tf=tf, color=:black)
     save("plots/out.png", fig)
 end
