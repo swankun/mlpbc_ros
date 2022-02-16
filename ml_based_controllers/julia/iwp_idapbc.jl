@@ -45,8 +45,9 @@ IDAPBC
 ==============================================================================#
 
 function load_idapbc_model(; kv=1, umax=1.5)
-    weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia"
-    weightfile = "model2.bson"
+    weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/models"
+    weightfile = "neuralidapbc_01.bson"
+    @show weightfile
     BSON.@load joinpath(weightdir, weightfile) θ
     Md⁻¹ = PSDMatrix(2, ()->θ[1:4])
     _, re = Chain(
@@ -59,7 +60,7 @@ function load_idapbc_model(; kv=1, umax=1.5)
     function (x::AbstractVector)
         xbar = [
             rem2pi(x[1]-pi, RoundNearest)
-            rem2pi(x[2], RoundNearest)
+            x[2]
             x[3]
             x[4]
         ]
@@ -68,12 +69,10 @@ function load_idapbc_model(; kv=1, umax=1.5)
     end
 end
 function load_bayes_idapbc_model(; num_samples=0, kv=1, umax=1.5)
-    # psμ = [31.81599845517258, 1.2449662349000192, -0.4429720022661034, 23.437419607082013, -2.7940005465094915, -0.13802583096399593, 0.6291068070182659, 0.7926600642950876, -0.1365413985013702, 0.050817252012090114, 0.04888089163561625, 0.19417523895265362, -0.096491413342068, -0.1192403878169369, 1.8029593380259277, -0.67375178405653, -0.21478740169920277, 0.543829691538897, -2.7182465238521805, 0.2547928617794956, 2.0910271827088183, -0.05510645904882095, -0.9788448387147795, 1.1209079402849231, 1.2562726607754247, -2.5256438458993418, 0.012521387299170373, -1.3449626173506206, -0.9237932773724693, -0.47067264955273286, -0.4312795305115486, -0.5488247035415885, 1.0727310634526028, -0.03358069021786072, -0.15390371217229382, -1.9181188776037188, 1.2136649883471229, -0.4150544284370016, -0.6807240711617653, -1.183131594601645, -0.9872535549754702, 1.7706712857317837, 0.04983172035069209, 2.170710883876701]
-    # psμ = [31.035446145530003, 7.92297235649231, 0.9513960118541301, 30.990489648712924, 0.370436394714019, -0.07183599378752871, 0.08058652210763718, 0.24254854127556014, -0.9082394738527316, -0.019648974665634835, -1.2020819706581432, -0.06623617978344006, 0.1983095535425591, 0.03241303334697136, -0.21289332981319678, 0.13781321723809312, -0.018765950384975676, -0.004515077962848985, -0.0474892211588299, -0.048684315907155586, -0.022675400047259445, -0.002452329326416339, -0.08078236529032956, -0.10269796899371361, -0.24171858019186485, -0.7367573685666868, -0.25679894959053506, -0.5483947061280932, -0.3422143240573471, 0.37120182680890784, 0.4170436014134886, -0.45744632086867887, 0.0993608086033219, 0.1996203174388519, 0.09550673055558441, 0.03960278999687588, 0.41334224127478225, -0.6775026741838427, -0.3144946600570302, -0.020694801837649036, -0.29126169146190756, -0.13627580441822768, 0.7063124799579481, 0.4838517629633578, 0.03446457809055936, -0.3105565596798651, 0.12539097931585363, -0.13592507664212597, 0.05907439522324337, -0.22769834921727233, -0.044942130182178436, -0.5264265731204589, -0.4815574922583618, -0.5753957281071209, -0.5999660642411709, -0.3958299870457513, -0.4426538739890489, -0.7329915144158635, -0.264756300326867, -0.35260795843067044, -0.194082954821054, 0.05468775340553617, 0.3591746902506883, -0.1877446360493185, -0.03012944640575222, -0.4034251301424799, -0.03809584669003557, -0.14528883645979107, -0.15377177812151271, -0.5668118903419526, -0.27379126469402476, 0.155912897520785, -0.6124294021446947, 0.6246742774339318, 0.012139961807882968, -0.005880949941409778, -0.01464068370853437, -0.004903443375072603, 0.007530185288287717] 
-    # psσ = randn(length(psμ))
-    # weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia"
-    weightdir = "/home/wankunsirichotiyakul/Downloads"
-    weightfile = "idapbc_paramnoise_1.bson"
+    @assert num_samples >= 0
+    weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/models"
+    weightfile = "neuralidapbc_bayesian_00.bson"
+    @show weightfile
     BSON.@load joinpath(weightdir, weightfile) hα
     paramlength = length(hα) ÷ 2
     psμ = first(hα, paramlength)
@@ -119,8 +118,9 @@ PBC
 ==============================================================================#
 
 function load_pbc_model(;umax=0.5)
-    weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia"
+    weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/models"
     weightfile = "neuralpbc_02.bson"
+    @show weightfile
     BSON.@load joinpath(weightdir, weightfile) ps
     Hd = FastChain(
         FastDense(6, 10, elu, bias=true),
@@ -135,9 +135,9 @@ function load_pbc_model(;umax=0.5)
 end
 function load_bayes_pbc_model(;num_samples::Int=0, umax=0.5)
     @assert num_samples >= 0
-    # weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia"
-    weightdir = "/home/wankunsirichotiyakul/Downloads"
-    weightfile = "normalm3_with1_1_4.bson"
+    weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/models"
+    weightfile = "neuralpbc_bayesian_00.bson"
+    @show weightfile
     BSON.@load joinpath(weightdir, weightfile) hα
     Hd = FastChain(
         FastDense(6, 3, elu, bias=true),
@@ -221,10 +221,10 @@ function main()
     # policy = energy_shaping_controller
 
     # policy = load_pbc_model(umax=0.25)
-    # policy = load_idapbc_model(kv=0.001, umax=0.8)
+    policy = load_idapbc_model(kv=0.001, umax=0.5)
 
     # policy = load_bayes_idapbc_model(num_samples=10, kv=0.015/10*0, umax=0.5)
-    policy = load_bayes_pbc_model(num_samples=10, umax=0.5)
+    # policy = load_bayes_pbc_model(num_samples=10, umax=0.5)
 
     loop_rate = Rate(800.0)
     while !is_shutdown()
