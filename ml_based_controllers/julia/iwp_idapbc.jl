@@ -224,7 +224,7 @@ function main()
     # policy = load_idapbc_model(kv=0.001, umax=0.8)
 
     # policy = load_bayes_idapbc_model(num_samples=10, kv=0.015/10*0, umax=0.5)
-    policy = load_bayes_pbc_model(num_samples=0, umax=0.25)
+    policy = load_bayes_pbc_model(num_samples=10, umax=0.5)
 
     loop_rate = Rate(800.0)
     while !is_shutdown()
