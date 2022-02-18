@@ -33,13 +33,16 @@ V(q) = [ m3*(cos(q[1]) - 1.0) ]
 MLBasedESC.jacobian(::typeof(V), q) = [-m3*sin(q[1]), zero(eltype(q))]
 const G = [-1.0, 1.0]
 const G⊥ = [1.0 1.0]
-const LQR = [
-    -7.409595362575457
-    0.05000000000000429
-    -1.1791663255097424
-    -0.03665716263249201
-]
-
+# const LQR = [
+#     -7.409595362575457
+#     0.05000000000000429
+#     -1.1791663255097424
+#     0.03665716263249201
+# ]
+# const LQR = vec([ -4.5377   -0.0100   -0.7191   -0.0038])
+# K = [-4.726951758417535 -0.025000000000010056 -0.7490837503352672 -0.009298445777620592]
+K = [-5.116704087488273 -0.03535533905932452 -0.810719867331168 -0.012768437378146015]
+const LQR = vec(K)
 #==============================================================================
 IDAPBC
 ==============================================================================#
@@ -181,7 +184,8 @@ function compute_control(x::Vector, swingup_controller::Function)
     if (1-cos(q1-pi)) < (1-cosd(30)) && abs(q1dot) < 5
         xbar = [
             rem2pi(q1-pi, RoundNearest)
-            rem2pi(q2, RoundNearest)
+            # rem2pi(q2, RoundNearest)
+            clamp(q2, -2pi, 2pi)
             q1dot
             q2dot
         ]
@@ -189,7 +193,7 @@ function compute_control(x::Vector, swingup_controller::Function)
     else
         effort = swingup_controller(x)
     end
-    return clamp(effort, -1.5, 1.5)
+    return clamp(effort, -1.0, 1.0)
 end
 
 function energy_shaping_controller(x::Vector)
@@ -221,9 +225,10 @@ function main()
     # policy = energy_shaping_controller
 
     # policy = load_pbc_model(umax=0.25)
-    policy = load_idapbc_model(kv=0.001, umax=0.5)
+    # policy = load_idapbc_model(kv=0.001, umax=0.5)
+    # policy = load_idapbc_model(kv=0.075, umax=0.5)
 
-    # policy = load_bayes_idapbc_model(num_samples=10, kv=0.015/10*0, umax=0.5)
+    policy = load_bayes_idapbc_model(num_samples=10, kv=0.015/15*5, umax=0.5)
     # policy = load_bayes_pbc_model(num_samples=10, umax=0.5)
 
     loop_rate = Rate(800.0)
