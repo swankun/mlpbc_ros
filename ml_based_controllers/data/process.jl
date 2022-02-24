@@ -237,6 +237,82 @@ function idapbc_disc_removal()
     save("plots/bar.png", fig)
 end
 
+function pbc_disc_removal()
+    datadir = "20220223"
+    files = readdir(datadir)
+    N = length(files)
+
+    tspan = Vector{Union{Float64,Tuple{Real,Real}}}(undef, N)
+    fill!(tspan, 0.0)
+    
+    perf = zeros(N)
+    set_theme!()
+    fig = Figure(resolution=(800,300*N))
+    for index = 1:N
+        file = files[index]
+        df = getdf(joinpath(datadir, file))
+        t = skipmissing(df."/joint_states/header/stamp")
+        q1 = skipmissing(df."/joint_states/theta1/position")
+        q2 = skipmissing(df."/joint_states/theta2/position")
+        q1dot = skipmissing(df."/joint_states/theta1/velocity")
+        q2dot = skipmissing(df."/joint_states/theta2/velocity")
+        amps = skipmissing(df."/joint_states/theta2/effort")
+
+        # ti0, tif = findall(!iszero, effort)[[1,end]] # motor enable until motor disable
+        ti0 = findfirst(x->abs(x)≥pi, q1dot)  # first "kick"
+        # tif = findall(!iszero, effort)[end]  # motor disable
+        # tif = findfirst(x->1-cos(x-pi)≤1-cosd(5), q1)
+        tif = findfirst( @. ( 1-cos(q1-pi) < 1-cosd(5) ) & ( abs(q1dot) < 0.5 ) )
+        # @show ti0, tif
+        # @show collect(q1)[tif]-pi, collect(q1dot)[tif], ( 1-cos(collect(q1)[tif]-pi) ≤ 1-cosd(10) ), (abs(collect(q1dot)[tif]) ≤ 1.0)
+        
+        t0 = getindex(t, ti0)
+        tf = getindex(collect(t), tif)
+        t0 -= first(t)
+        tf -= first(t)
+        # if isequal(file, "neuralpbc_0rings_01.csv")
+        #     tf -= 2
+        # end
+        tspan[index] = (t0, tf)
+        perf[index] = performance_metric(df, tspan[index])
+        Axis(fig[index,1], title=file)
+        theta1(df, fig, tf=tspan[index], color=:black)
+        Axis(fig[index,2], title=file)
+        theta1dot(df, fig, tf=tspan[index], color=:black)
+    end
+    save("plots/out.png", fig)
+
+    default_plot_theme()
+    perf_avg = map(mean, Iterators.partition(perf, 3))
+    fig = Figure(resolution=(800,600))
+    colors = Makie.wong_colors()
+    ax = Axis(fig[1,1], 
+        xticks = (0:4),
+    )
+    tbl = (
+        x = repeat([0,1,2,3,4], 2),
+        height = perf_avg,
+        grp = [ones(Int,5); 2*ones(Int,5)],
+    )
+    barplot!(ax, tbl.x, tbl.height,
+        dodge = tbl.grp,
+        color = colors[tbl.grp]
+    )
+    labels = ["Bayesian", "NeuralPBC"]
+    elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
+    ylims!(ax, 0, 30)
+
+    Legend(fig[1,1], elements, labels, 
+        tellheight = false,
+        tellwidth = false,
+        halign = :right,
+        valign = :top,
+        orientation=:horizontal
+    )
+    save("plots/bar.png", fig)
+end
+
+
 function performance_metric(df::DataFrame, tspan)
     q1 = filter(!ismissing, df."/joint_states/theta1/position")
     q1dot = filter(!ismissing, df."/joint_states/theta1/velocity")
@@ -246,6 +322,6 @@ function performance_metric(df::DataFrame, tspan)
     trimafter!(tspan, t, q1, q1dot, u)
     @assert length(q1) == length(q1dot) == length(u)
     N = length(q1)
-    loss = @. 1 - cos(q1) + q1dot^2 + 1u^2
+    loss = @. 1 - cos(q1-pi) + 1/2*q1dot^2 + 1/2*u^2
     sum(loss) / N
 end
