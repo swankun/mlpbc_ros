@@ -21,7 +21,7 @@ float old_position = -999;
 const float cutoff_freq   = 15.0;     // Cutoff frequency in Hz
 const float sampling_time = (float)PUBLISH_PERIOD_MICRO/1e6;    // Sampling time in seconds.
 IIR::ORDER  order  = IIR::ORDER::OD3; // Order (OD1 to OD4)
-Filter lpf(15.0, sampling_time, order);
+Filter lpf(cutoff_freq, sampling_time, order);
 
 // ROS message
 sensor_msgs::JointState jstate;

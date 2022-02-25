@@ -25,9 +25,9 @@ import BSON
 Constants
 ==============================================================================#
 
-const I1 = 0.0455
-const I2 = 0.00425
-const m3 = 0.183*9.81
+const I1 = 0.03401
+const I2 = 0.001405
+const m3 = 0.1162*9.81
 const M⁻¹ = inv(diagm([I1, I2]))
 V(q) = [ m3*(cos(q[1]) - 1.0) ]
 MLBasedESC.jacobian(::typeof(V), q) = [-m3*sin(q[1]), zero(eltype(q))]
@@ -39,24 +39,24 @@ const G⊥ = [1.0 1.0]
 #     -1.1791663255097424
 #     0.03665716263249201
 # ]
-# const LQR = vec([ -4.5377   -0.0100   -0.7191   -0.0038])
-# K = [-4.726951758417535 -0.025000000000010056 -0.7490837503352672 -0.009298445777620592]
-K = [-5.116704087488273 -0.03535533905932452 -0.810719867331168 -0.012768437378146015]
-const LQR = vec(K)
+# const LQR = vec([-5.116704087488273 -0.03535533905932452 -0.810719867331168 -0.012768437378146015])
+# const LQR = [-3.4802710899961165, -0.00707106781188502, -0.599496113258823, -0.0049664133606209405]
+const LQR = [-3.8150228674227527, -0.010000000000018733, -0.6570687716257183, -0.0065154336851863896]   # 1 ring
 #==============================================================================
 IDAPBC
 ==============================================================================#
 
 function load_idapbc_model(; kv=1, umax=1.5)
     weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/models"
-    weightfile = "neuralidapbc_01.bson"
+    weightfile = "neuralidapbc_1ring.bson"
     @show weightfile
-    BSON.@load joinpath(weightdir, weightfile) θ
+    BSON.@load joinpath(weightdir, weightfile) idapbc
+    θ = idapbc.θ
     Md⁻¹ = PSDMatrix(2, ()->θ[1:4])
     _, re = Chain(
-        Dense(2, 10, elu; bias=false),
-        Dense(10, 10, elu; bias=false),
-        Dense(10, 1, square; bias=false),
+        Dense(2, 8, elu; bias=false),
+        Dense(8, 4, elu; bias=false),
+        Dense(4, 1, square; bias=false),
     ) |> Flux.destructure
     Vd = re(θ[5:end])
     P = IDAPBCProblem(2,M⁻¹,Md⁻¹,V,Vd,G,G⊥)
@@ -122,7 +122,7 @@ PBC
 
 function load_pbc_model(;umax=0.5)
     weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/models"
-    weightfile = "neuralpbc_02.bson"
+    weightfile = "neuralpbc_1ring.bson"
     @show weightfile
     BSON.@load joinpath(weightdir, weightfile) ps
     Hd = FastChain(
@@ -181,7 +181,7 @@ Controllers
 function compute_control(x::Vector, swingup_controller::Function)
     effort = 0.0
     q1, q2, q1dot, q2dot = x
-    if (1-cos(q1-pi)) < (1-cosd(30)) && abs(q1dot) < 5
+    if (1-cos(q1-pi)) < (1-cosd(20)) && abs(q1dot) < 5
         xbar = [
             rem2pi(q1-pi, RoundNearest)
             # rem2pi(q2, RoundNearest)
@@ -195,7 +195,19 @@ function compute_control(x::Vector, swingup_controller::Function)
     end
     return clamp(effort, -1.0, 1.0)
 end
-
+function spong_linear_controller(x::Vector)
+    q1, q2, q1dot, q2dot = x
+    a = m3/I1
+    bp = 1/I1
+    br = 1/I2
+    ω0 = 3/2*sqrt(a)
+    ζ = 1/sqrt(2)
+    α = 1/5
+    kpp = -1/bp*((1+2*a*ζ)*ω0^2 + a)
+    kdp = -1/a/bp*((a+2*ζ)*ω0*a + a*ω0^3)
+    kdr = -1/a/br*α*ω0^3
+    effort = -kpp*(q1-pi) - kdp*q1dot - kdr*q2dot
+end
 function energy_shaping_controller(x::Vector)
     q1, q2, q1dot, q2dot = x
     w1, w2, w3, w4 = (-0.09, 0.05, 0.0011375, -0.005)
@@ -224,11 +236,11 @@ function main()
 
     # policy = energy_shaping_controller
 
-    # policy = load_pbc_model(umax=0.25)
-    # policy = load_idapbc_model(kv=0.001, umax=0.5)
+    # policy = load_pbc_model(umax=0.5)
+    policy = load_idapbc_model(kv=0.5, umax=0.25)
     # policy = load_idapbc_model(kv=0.075, umax=0.5)
 
-    policy = load_bayes_idapbc_model(num_samples=10, kv=0.015/15*5, umax=0.5)
+    # policy = load_bayes_idapbc_model(num_samples=10, kv=0.015/15*5, umax=0.5)
     # policy = load_bayes_pbc_model(num_samples=10, umax=0.5)
 
     loop_rate = Rate(800.0)
