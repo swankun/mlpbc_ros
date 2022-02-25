@@ -12,6 +12,9 @@ using CairoMakie
 using LaTeXStrings
 using Statistics
 
+######################################
+# Constants
+######################################
 
 function publication_theme()
     majorfontsize = 28*1.5
@@ -44,6 +47,10 @@ function publication_theme()
 end
 
 
+######################################
+# Read I/O
+######################################
+
 function loadpbc(pspath::String)
     Hd = FastChain(
         FastDense(6, 10, elu, bias=true),
@@ -54,7 +61,6 @@ function loadpbc(pspath::String)
     BSON.@load pspath ps
     return pbc, ps
 end
-
 
 function getdf(filename="20220217/idapbc_0rings_00.csv")
     # Read from file
@@ -93,27 +99,36 @@ function getdf(filename="20220217/idapbc_0rings_00.csv")
     return df
 end
 
+######################################
+# Data processing
+######################################
 
 function view_swing(df::DataFrame)
     lqr_roa(q1,q1dot) = (1-cos(q1) < 1-cosd(5)) && (abs(q1dot) < 0.5)
-    i0 = findfirst(x->abs(x)>0.5*pi, df.q1dot) # first "kick"
+    i0 = findfirst(x->abs(x)>0.9*pi, df.q1dot) # first "kick"
     i1 = findfirst(lqr_roa.(df.q1, df.q1dot)) # first enters LQR's RoA
     @view df[i0:i1, :]
 end
 
-
 function performance_metric(df::Union{DataFrame,SubDataFrame})
+    N = lastindex(df, 1)
     loss = @. 1 - cos(df.q1) + 1/2*df.q1dot^2 + 1/2*df.u^2
     sum(loss)
 end
 
 
+######################################
+# Utilities for batch processing
+######################################
+
 function process_experiment(file)
     raw = getdf(file)
     df = view_swing(raw)
     downsample = @view df[1:20:lastindex(df,1), :]
+    N = length(1:20:lastindex(df,1))
     return downsample, performance_metric(downsample)
 end
+
 function process_experiments(datadir)
     files = readdir(datadir, join=true)
     res = process_experiment.(files)
@@ -121,20 +136,36 @@ function process_experiments(datadir)
 end
 
 
-function plot_experiment(data; parent=Figure(800,300))
-    ax1 = Axis(parent[1,1])
+######################################
+# Plotting
+######################################
+
+function plot_experiment(data; parent=Figure(800,300), kwargs...)
+    ax1 = Axis(parent[1,1]; kwargs...)
     lines!(ax1, data.t, data.q1, color=:black)
-    ax2 = Axis(parent[1,2])
+    ax2 = Axis(parent[1,2]; kwargs...)
     lines!(ax2, data.t, data.q1dot, color=:black)
+    return parent
 end
+
 function plot_experiments(data)
     N = length(data)
     fig = Figure(resolution=(800,300*N))
     foreach(enumerate(data)) do (index, df)
-        plot_experiment(df, parent=fig[index, 1]);
+        plot_experiment(df, parent=fig[index, 1]; kwargs...);
     end
-    save("plots/out.png", fig)
+    return fig
 end
+
+function plot_experiments(data, titles; kwargs...)
+    N = length(data)
+    fig = Figure(resolution=(800,300*N))
+    foreach(enumerate(data)) do (index, df)
+        plot_experiment(df, parent=fig[index, 1]; title=popfirst!(titles), kwargs...);
+    end
+    return fig
+end
+
 function plot_scores(scores, category, group; catlabels=nothing, grplabels=nothing)
     set_theme!(publication_theme())
     scat = sort(unique(category))
@@ -145,42 +176,66 @@ function plot_scores(scores, category, group; catlabels=nothing, grplabels=nothi
     set_theme!(publication_theme())
     fig = Figure(resolution=(800,600))
     colors = Makie.wong_colors()
-    ax = Axis(fig[1,1], xticks = (scat, catlabels))
+    ax = Axis(fig[2,1], xticks = (scat, catlabels))
     barplot!(ax, category, scores,
         dodge = group,
         color = colors[group]
     )
     elements = [PolyElement(polycolor = colors[i]) for i in 1:length(grplabels)]
     Legend(fig[1,1], elements, grplabels, 
-        tellheight = false,
-        tellwidth = false,
-        halign = :right,
-        valign = :top,
-        orientation=:horizontal
+        orientation=:horizontal,
+        # tellheight = false,
+        # tellwidth = false,
+        # halign = :center,
+        # valign = :top,
     )
-    save("plots/bar.png", fig)
     set_theme!()
+    return fig
 end
 
 
-function barplot_20220223(scores)
-    score_avg = map(mean, Iterators.partition(scores, 3))
-    score_avg ./= minimum(score_avg)
-    plot_scores(score_avg, 
-        repeat([0,1,2,3,4], 2), 
-        [ones(Int,5); 2*ones(Int,5)]; 
-        catlabels=["$(n) rings" for n=0:4],
-        grplabels=["Bayesian", "NeuralPBC"]
-    )
+######################################
+# Experiment-specific code
+######################################
+
+function batch_20220223(; plot_traj=true, plot_bar=true)
+    datadir = "20220223"
+    data, scores = process_experiments(datadir)
+    if (plot_traj)
+        filenames = readdir(datadir)
+        fig = plot_experiments(data, filenames)
+        save("plots/out.png", fig)
+    end
+    if (plot_bar)
+        score_avg = map(mean, Iterators.partition(scores, 3))
+        score_avg ./= minimum(score_avg)
+        fig = plot_scores(score_avg, 
+            repeat([0,1,2,3,4], 2), 
+            [ones(Int,5); 2*ones(Int,5)]; 
+            catlabels=["$(n) rings" for n=0:4],
+            grplabels=["Bayesian", "NeuralPBC"]
+        )
+        save("plots/bar.png", fig)
+    end
 end
 
-function barplot_20220217(scores)
-    score_avg = [mean(scores[1:2]); scores[3]; mean(scores[4:5]); scores[6]]
-    score_avg ./= minimum(score_avg)
-    plot_scores(score_avg, 
-        [0,1,0,1],
-        [1,1,2,2];
-        catlabels=["$(n) rings" for n=[0,2]], 
-        grplabels=["Bayesian", "NeuralIDAPBC"]
-    )
+function batch_20220217(; plot_traj=true, plot_bar=true)
+    datadir = "20220217"
+    data, scores = process_experiments(datadir)
+    if (plot_traj)
+        filenames = readdir(datadir)
+        fig = plot_experiments(data, filenames)
+        save("plots/out.png", fig)
+    end
+    if (plot_bar)
+        score_avg = [mean(scores[1:2]); scores[3]; mean(scores[4:5]); scores[6]]
+        score_avg ./= minimum(score_avg)
+        fig = plot_scores(score_avg, 
+            [0,1,0,1],
+            [1,1,2,2];
+            catlabels=["$(n) rings" for n=[0,2]], 
+            grplabels=["Bayesian", "NeuralIDAPBC"]
+        )
+        save("plots/bar.png", fig)
+    end
 end
