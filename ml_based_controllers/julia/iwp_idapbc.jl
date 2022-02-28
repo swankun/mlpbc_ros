@@ -123,7 +123,7 @@ PBC
 
 function load_pbc_model(;umax=0.5)
     weightdir = "/home/wankunsirichotiyakul/Projects/rcl/mlpbc_ros/src/ml_based_controllers/julia/models"
-    weightfile = "neuralpbc_1ring.bson"
+    weightfile = "neuralpbc_02.bson"
     @show weightfile
     BSON.@load joinpath(weightdir, weightfile) ps
     Hd = FastChain(
@@ -182,11 +182,10 @@ Controllers
 function compute_control(x::Vector, swingup_controller::Function)
     effort = 0.0
     q1, q2, q1dot, q2dot = x
-    if (1-cos(q1-pi)) < (1-cosd(20)) && abs(q1dot) < 5
+    if (1-cos(q1-pi)) < (1-cosd(30)) && abs(q1dot) < 5
         xbar = [
             rem2pi(q1-pi, RoundNearest)
-            rem2pi(q2, RoundNearest)
-            # clamp(q2, -2pi, 2pi)
+            rem(q2, 8*2pi, RoundNearest)
             q1dot
             q2dot
         ]
@@ -237,9 +236,8 @@ function main()
 
     # policy = energy_shaping_controller
 
-    # policy = load_pbc_model(umax=0.5)
-    policy = load_idapbc_model(kv=0.5, umax=0.2)
-    # policy = load_idapbc_model(kv=0.075, umax=0.5)
+    policy = load_pbc_model(umax=0.3)
+    # policy = load_idapbc_model(kv=0.5, umax=0.3)
 
     # policy = load_bayes_idapbc_model(num_samples=10, kv=0.015/15*5, umax=0.5)
     # policy = load_bayes_pbc_model(num_samples=10, umax=0.5)
