@@ -291,7 +291,7 @@ end
 Base.atexit(safe_shutdown_hack)
 
 if !isinteractive()
-    @info "Starting Julia's main()"
+    @info "Julia packages loaded. Starting main()"
     main()
 end
 
