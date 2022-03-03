@@ -17,9 +17,9 @@ using Statistics
 ######################################
 
 function publication_theme()
-    majorfontsize = 28*1.5
-    minorfontsize = 24*1.5
-    tinyfontsize = 18*1.5
+    majorfontsize = 36
+    minorfontsize = 32
+    tinyfontsize = 24
     T = Theme(
         Axis = (
             xlabelfont="Latin Modern Roman",
@@ -110,7 +110,10 @@ end
 
 function view_swing(df::DataFrame)
     lqr_roa(q1,q1dot) = (1-cos(q1) < 1-cosd(30)) && (abs(q1dot) < 5)
-    i0 = findfirst(x->abs(x)>1.5pi, df.q1dot) # first "kick"
+    # i0 = findfirst(df.q1) do x  # for plot_trajectories_ontop 
+    #     (1-cos(x) < 1-cosd(125)) && (x < -pi)
+    # end
+    i0 = findfirst(x->abs(x)>1.5pi, df.q1dot) # first "kick", for barplot
     i1 = findfirst(lqr_roa.(df.q1, df.q1dot)) # first enters LQR's RoA
     @view df[i0:i1, :]
 end
@@ -118,7 +121,8 @@ end
 function performance_metric(df::Union{DataFrame,SubDataFrame})
     N = lastindex(df, 1)
     # loss = @. 1/2*( 2(1 - cos(df.q1)) + df.q1dot^2 + df.q2dot^2 + df.u^2 )
-    loss = @. 1/2*( 2(1 - cos(df.q1)) + df.q1dot^2 + 5df.q2dot^2 + 10df.u^2 )
+    # loss = @. 1/2*( 2(1 - cos(df.q1)) + df.q1dot^2 + 5df.q2dot^2 + 10df.u^2 )
+    loss = @. 1/2*( 2(1 - cos(df.q1)) + 5df.q1dot^2 + 100df.q2dot^2 + 10df.u^2 )
     sum(loss)
 end
 
@@ -156,7 +160,7 @@ function plot_experiment(data; parent=Figure(800,300), kwargs...)
     return parent
 end
 
-function plot_experiments(data)
+function plot_experiments(data; kwargs...)
     N = length(data)
     fig = Figure(resolution=(800,300*N))
     foreach(enumerate(data)) do (index, df)
@@ -174,6 +178,18 @@ function plot_experiments(data, titles; kwargs...)
     return fig
 end
 
+function plot_trajectories_ontop(data, titles; kwargs...)
+    fig = Figure(resolution=(800,400))
+    ax1 = Axis(fig[1,1]; kwargs...)
+    ax2 = Axis(fig[1,2]; kwargs...)
+    foreach(enumerate(data)) do (index, df)
+        tau = df.t .- df.t[1]
+        lines!(ax1, tau, df.q1)
+        lines!(ax2, tau, df.q1dot)
+    end
+    return fig
+end
+
 function plot_scores(scores, category, group; catlabels=nothing, grplabels=nothing)
     set_theme!(publication_theme())
     scat = sort(unique(category))
@@ -182,7 +198,7 @@ function plot_scores(scores, category, group; catlabels=nothing, grplabels=nothi
     grplabels = isnothing(grplabels) ? string.(collect(1:M)) : grplabels
 
     set_theme!(publication_theme())
-    fig = Figure(resolution=(800,600))
+    fig = Figure(resolution=(800,400))
     colors = Makie.wong_colors()
     ax = Axis(fig[1,1], xticks = (scat, catlabels))
     barplot!(ax, category, scores,
@@ -199,7 +215,7 @@ function plot_scores(scores, category, group; catlabels=nothing, grplabels=nothi
         halign = :right,
         valign = :top,
     )
-    ylims!(ax, 0, 6)
+    ylims!(ax, 0, ceil(Int,maximum(scores))+2)
     set_theme!()
     return fig
 end
@@ -256,13 +272,16 @@ function batch_20220301(; plot_traj=true, plot_bar=true)
     data, scores = process_experiments(datadir)
     if (plot_traj)
         filenames = readdir(datadir)
-        fig = plot_experiments(data, filenames)
-        save("plots/out.png", fig)
+        foreach(enumerate(Iterators.partition(data,3))) do (i, df)
+            fig = plot_trajectories_ontop(df, filenames)
+            save("plots/$(i).png", fig)
+        end
     end
     if (plot_bar)
         score_avg = map(mean, Iterators.partition(scores, 3))
         nominal = score_avg[4]
         score_avg ./= nominal
+        score_std = map(std, Iterators.partition(scores, 3))
         fig = plot_scores(score_avg, 
             repeat([1,2,3,4], 2), 
             [ones(Int,4); 2ones(Int,4)]; 
@@ -270,6 +289,6 @@ function batch_20220301(; plot_traj=true, plot_bar=true)
             grplabels=["Deterministic", "Bayesian"]
         )
         save("plots/bar.png", fig)
-        save("plots/idapbc_bar.eps", fig)
+        # save("plots/idapbc_bar.eps", fig)
     end
 end
