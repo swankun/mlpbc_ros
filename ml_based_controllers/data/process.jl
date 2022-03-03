@@ -19,6 +19,7 @@ using Statistics
 function publication_theme()
     majorfontsize = 28*1.5
     minorfontsize = 24*1.5
+    tinyfontsize = 18*1.5
     T = Theme(
         Axis = (
             xlabelfont="Latin Modern Roman",
@@ -42,6 +43,10 @@ function publication_theme()
         Legend = (
             labelfont = "Latin Modern Roman",
             labelsize = minorfontsize
+        ),
+        BarPlot = (
+            label_font = "Latin Modern Roman",
+            label_size = tinyfontsize
         )
     )
 end
@@ -104,15 +109,16 @@ end
 ######################################
 
 function view_swing(df::DataFrame)
-    lqr_roa(q1,q1dot) = (1-cos(q1) < 1-cosd(5)) && (abs(q1dot) < 0.5)
-    i0 = findfirst(x->abs(x)>0.9*pi, df.q1dot) # first "kick"
+    lqr_roa(q1,q1dot) = (1-cos(q1) < 1-cosd(30)) && (abs(q1dot) < 5)
+    i0 = findfirst(x->abs(x)>1.5pi, df.q1dot) # first "kick"
     i1 = findfirst(lqr_roa.(df.q1, df.q1dot)) # first enters LQR's RoA
     @view df[i0:i1, :]
 end
 
 function performance_metric(df::Union{DataFrame,SubDataFrame})
     N = lastindex(df, 1)
-    loss = @. 1 - cos(df.q1) + 1/2*df.q1dot^2 + 1/2*df.u^2
+    # loss = @. 1/2*( 2(1 - cos(df.q1)) + df.q1dot^2 + df.q2dot^2 + df.u^2 )
+    loss = @. 1/2*( 2(1 - cos(df.q1)) + df.q1dot^2 + 5df.q2dot^2 + 10df.u^2 )
     sum(loss)
 end
 
@@ -124,14 +130,16 @@ end
 function process_experiment(file)
     raw = getdf(file)
     df = view_swing(raw)
-    downsample = @view df[1:20:lastindex(df,1), :]
-    N = length(1:20:lastindex(df,1))
+    downsample = @view df[1:2:lastindex(df,1), :]
+    N = length(1:2:lastindex(df,1))
     return downsample, performance_metric(downsample)
 end
 
 function process_experiments(datadir)
     files = readdir(datadir, join=true)
+    filter!(endswith(".csv"), files)
     res = process_experiment.(files)
+    hcat(files, last.(res)) |> display
     @. (first(res), last(res))
 end
 
@@ -176,19 +184,22 @@ function plot_scores(scores, category, group; catlabels=nothing, grplabels=nothi
     set_theme!(publication_theme())
     fig = Figure(resolution=(800,600))
     colors = Makie.wong_colors()
-    ax = Axis(fig[2,1], xticks = (scat, catlabels))
+    ax = Axis(fig[1,1], xticks = (scat, catlabels))
     barplot!(ax, category, scores,
         dodge = group,
-        color = colors[group]
+        color = colors[group],
+        bar_labels=string.(round.(scores, digits=2)),
+        label_rotation=pi/6
     )
     elements = [PolyElement(polycolor = colors[i]) for i in 1:length(grplabels)]
     Legend(fig[1,1], elements, grplabels, 
         orientation=:horizontal,
-        # tellheight = false,
-        # tellwidth = false,
-        # halign = :center,
-        # valign = :top,
+        tellheight = false,
+        tellwidth = false,
+        halign = :right,
+        valign = :top,
     )
+    ylims!(ax, 0, 6)
     set_theme!()
     return fig
 end
@@ -237,5 +248,28 @@ function batch_20220217(; plot_traj=true, plot_bar=true)
             grplabels=["Bayesian", "NeuralIDAPBC"]
         )
         save("plots/bar.png", fig)
+    end
+end
+
+function batch_20220301(; plot_traj=true, plot_bar=true)
+    datadir = "20220301/idapbc"
+    data, scores = process_experiments(datadir)
+    if (plot_traj)
+        filenames = readdir(datadir)
+        fig = plot_experiments(data, filenames)
+        save("plots/out.png", fig)
+    end
+    if (plot_bar)
+        score_avg = map(mean, Iterators.partition(scores, 3))
+        nominal = score_avg[4]
+        score_avg ./= nominal
+        fig = plot_scores(score_avg, 
+            repeat([1,2,3,4], 2), 
+            [ones(Int,4); 2ones(Int,4)]; 
+            catlabels=["$(n) " * (n==1 ? "ring" : "rings") for n=1:4],
+            grplabels=["Deterministic", "Bayesian"]
+        )
+        save("plots/bar.png", fig)
+        save("plots/idapbc_bar.eps", fig)
     end
 end
